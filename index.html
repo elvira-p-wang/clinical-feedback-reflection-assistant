@@ -639,6 +639,49 @@ function renderTrends(){
     </div>`;
   }).join("") + `<div class="hint" style="margin-top:10px;">Tallied across ${history.length} saved feedback entries. Themes that keep recurring are worth a longer-term improvement plan.</div>`;
 }
+
+/* ---------------------------------------------------------
+   UTIL
+--------------------------------------------------------- */
+function copyReflection(){
+  const el = document.getElementById('reflectionOut');
+  el.select();
+  document.execCommand('copy');
+  showToast("Copied to clipboard");
+}
+
+function downloadReflection(){
+  const text = document.getElementById('reflectionOut').value;
+  const blob = new Blob([text], {type:"text/plain;charset=utf-8"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `reflection_${new Date().toISOString().slice(0,10)}.txt`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2200);
+}
+
+function loadSample(){
+  document.getElementById('rawInput').value =
+`• Limited examination due to patient complex medical history and inability for patient to tolerate a dental appointment.
+• CE assisted today with examination, discussion with the parent and advice/recommendations for the parent.
+• Please ensure that you ask follow-up questions with your medical history. For example, today you had a patient with epilepsy, so you need to ask follow-up questions around the types and frequency of seizures, if the parent has any prior knowledge or understanding of when the seizures will occur and what would trigger these events.
+• Oral hygiene instructions and dietary advice provided to patient and parent with assistance from CE.
+• Limited examination or treatment planning provided, however, good learning experience for patient management and ensuring that you write detailed notes.
+• Consider your appointment notes as well – ensure your notes reflect your appointment today. For example, what did you discuss with the parent, what advice, information or recommendations were provided and why, what will you need to complete for the next appointment. Your treatment notes are a medio-legal document and therefore should be an accurate reflection of the examination findings and any further discussions that have occurred. Considered including information about the discussions you have had with the parent and the recommendations that were made.
+• Breach of professionalism given today for incorrect/appropriate footwear in clinic. Please ensure you are wearing leather or leather-like shoes in clinic placement at Nepean as per our LHD policy.`;
+}
+
+// init
+renderHistory();
+renderTrends();
 </script>
 </body>
 </html>
