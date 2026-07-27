@@ -513,6 +513,132 @@ KEY TAKEAWAY
 function escapeHtml(s){
   return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
 }
+
+/* ---------------------------------------------------------
+   HISTORY / LOCALSTORAGE
+--------------------------------------------------------- */
+const HISTORY_KEY = "cfr_history_en_v1";
+
+function getHistory(){
+  try{
+    return JSON.parse(localStorage.getItem(HISTORY_KEY)) || [];
+  }catch(e){ return []; }
+}
+function setHistory(arr){
+  localStorage.setItem(HISTORY_KEY, JSON.stringify(arr));
+}
+
+function saveEntry(){
+  if(!currentRaw){ showToast("Please parse feedback first"); return; }
+  const history = getHistory();
+  const growthCats = [...new Set(currentParsed.filter(i=>i.sentiment==="growth" && i.category!=="general").map(i=>i.category))];
+  const entry = {
+    id: Date.now(),
+    date: new Date().toISOString().slice(0,10),
+    rawText: currentRaw,
+    reflection: document.getElementById('reflectionOut').value,
+    growthCategories: growthCats
+  };
+  history.unshift(entry);
+  setHistory(history);
+  renderHistory();
+  renderTrends();
+  showToast("Saved to history");
+}
+
+function renderHistory(){
+  const history = getHistory();
+  const container = document.getElementById('historyOut');
+  if(history.length===0){
+    container.innerHTML = '<div class="empty-msg">No saved entries yet.</div>';
+    return;
+  }
+  container.innerHTML = history.map(e=>{
+    const cats = e.growthCategories.map(k=>CATEGORIES[k] ? CATEGORIES[k].label : k).join(", ") || "No clear growth areas";
+    return `<div class="history-entry">
+      <div>
+        <div>${e.date}</div>
+        <div class="meta">Involves: ${cats}</div>
+      </div>
+      <div class="history-actions">
+        <button class="secondary" onclick="viewEntry(${e.id})">View</button>
+        <button class="danger" onclick="deleteEntry(${e.id})">Delete</button>
+      </div>
+    </div>`;
+  }).join("");
+}
+
+function viewEntry(id){
+  const history = getHistory();
+  const entry = history.find(e=>e.id===id);
+  if(!entry) return;
+  document.getElementById('rawInput').value = entry.rawText;
+  document.getElementById('reflectionOut').value = entry.reflection;
+  currentRaw = entry.rawText;
+  currentParsed = parseFeedback(entry.rawText);
+  renderCategorized(currentParsed);
+  renderPriority(currentParsed);
+  document.getElementById('categorizedCard').style.display='block';
+  document.getElementById('priorityCard').style.display='block';
+  document.getElementById('reflectionCard').style.display='block';
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+function deleteEntry(id){
+  let history = getHistory();
+  history = history.filter(e=>e.id!==id);
+  setHistory(history);
+  renderHistory();
+  renderTrends();
+}
+
+function clearHistory(){
+  if(!confirm("Are you sure you want to clear all history? This cannot be undone.")) return;
+  setHistory([]);
+  renderHistory();
+  renderTrends();
+}
+
+function exportHistory(){
+  const history = getHistory();
+  const blob = new Blob([JSON.stringify(history, null, 2)], {type:"application/json"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `clinical_feedback_history_${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function renderTrends(){
+  const history = getHistory();
+  const container = document.getElementById('trendOut');
+  if(history.length===0){
+    container.innerHTML = '<div class="empty-msg">No history yet.</div>';
+    return;
+  }
+  const tally = {};
+  history.forEach(e=>{
+    (e.growthCategories||[]).forEach(cat=>{
+      tally[cat] = (tally[cat]||0)+1;
+    });
+  });
+  const entries = Object.entries(tally).sort((a,b)=>b[1]-a[1]);
+  if(entries.length===0){
+    container.innerHTML = '<div class="empty-msg">No clear growth-area categories in your history yet.</div>';
+    return;
+  }
+  const max = entries[0][1];
+  container.innerHTML = entries.map(([key,count])=>{
+    const label = CATEGORIES[key] ? CATEGORIES[key].label : key;
+    const pct = Math.round((count/max)*100);
+    return `<div class="trend-row">
+      <div class="trend-label">${label}</div>
+      <div class="trend-bar-bg"><div class="trend-bar-fill" style="width:${pct}%"></div></div>
+      <div class="trend-count">${count}</div>
+    </div>`;
+  }).join("") + `<div class="hint" style="margin-top:10px;">Tallied across ${history.length} saved feedback entries. Themes that keep recurring are worth a longer-term improvement plan.</div>`;
+}
 </script>
 </body>
 </html>
