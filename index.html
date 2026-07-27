@@ -226,6 +226,81 @@
 <div class="toast" id="toast"></div>
 
 <script>
+/* ---------------------------------------------------------
+   CATEGORY KNOWLEDGE BASE
+--------------------------------------------------------- */
+const CATEGORIES = {
+  professionalism: {
+    label: "Professionalism & Compliance",
+    keywords: ["professionalism","breach","footwear","shoes","dress code","uniform","punctual","late","policy","lhd","attire","ppe","infection control"],
+    rationale: "Professional presentation and dress-code compliance (e.g. closed leather shoes) relate directly to infection control, sharps-injury protection, and clinic/LHD policy — it's a core marker of professional accountability.",
+    actionTemplate: "Check your placement site's dress code / policy before every session, and make sure you're wearing compliant closed leather or leather-like shoes. Add this to your pre-clinic checklist.",
+    priority: 1
+  },
+  history_taking: {
+    label: "History Taking & Medical Complexity",
+    keywords: ["medical history","follow-up question","follow up question","epilepsy","seizure","asthma","diabetes","allergy","medication","condition","complex medical history","tolerate","autism","asd","anxiety","cerebral palsy","congenital","bleeding disorder","immunocompromised"],
+    rationale: "Detailed follow-up questioning on complex medical conditions (type, frequency, triggers, warning signs, emergency plan) is essential for chairside risk assessment and emergency preparedness.",
+    actionTemplate: "Prepare a condition-specific follow-up question checklist and review it before your next appointment involving this medical history.",
+    priority: 2
+  },
+  documentation: {
+    label: "Documentation & Medico-legal Notes",
+    keywords: ["notes","documentation","record","medico-legal","medico legal","treatment notes","write detailed notes","reflect your appointment","appointment notes"],
+    rationale: "Clinical notes are a medico-legal record. They must accurately capture examination findings, the content of discussions with the patient/parent, the advice given and why, and the plan for next visit.",
+    actionTemplate: "Immediately after each appointment, before leaving clinic, write notes covering: findings, what was discussed with the patient/parent, advice/recommendations given and the reasoning, and the plan for next appointment.",
+    priority: 2
+  },
+  clinical_skills: {
+    label: "Clinical Skills & Treatment Planning",
+    keywords: ["examination","exam","diagnosis","treatment plan","treatment planning","clinical findings","radiograph","x-ray","restoration","extraction","anaesthesia","anesthetic","procedure","limited examination"],
+    rationale: "Systematic clinical examination and treatment planning are the foundation of safe, evidence-based dental care.",
+    actionTemplate: "Review the clinical protocol/checklist for the examination or treatment planning step that was limited today, and rehearse it before your next similarly complex case.",
+    priority: 3
+  },
+  patient_communication: {
+    label: "Patient & Parent Communication",
+    keywords: ["parent","discussion","advice","recommendations","rapport","explain","behaviour management","behavior management","anxious","communication"],
+    rationale: "Clear communication with patients and parents builds trust and ensures recommendations are understood and followed through on.",
+    actionTemplate: "In your next patient interaction, explicitly note what you explained to the patient/parent, why you recommended it, and how you confirmed they understood.",
+    priority: 4
+  },
+  oral_hygiene_preventive: {
+    label: "Oral Hygiene & Preventive Advice",
+    keywords: ["oral hygiene","ohi","dietary advice","diet","preventive","fluoride","brushing"],
+    rationale: "Individualized oral hygiene and dietary advice is a core part of preventive dental care.",
+    actionTemplate: "Try delivering the oral hygiene / dietary advice component independently next time, relying less on CE assistance, and document the specific advice you gave.",
+    priority: 5
+  },
+  time_case_management: {
+    label: "Case Complexity & Time Management",
+    keywords: ["limited","unable","complex","could not","learning experience","patient management"],
+    rationale: "Complex or uncooperative cases that limit examination/treatment are themselves an important case-management learning opportunity.",
+    actionTemplate: "For complex or uncooperative patients, prepare alternative strategies in advance (e.g. splitting the visit across appointments, behaviour management techniques).",
+    priority: 6
+  }
+};
+
+const CATEGORY_ORDER = Object.keys(CATEGORIES);
+
+const GROWTH_CUES = [
+  "please ensure","you need to","need to ask","consider","however","breach",
+  "incorrect","limited","should ","should have","ensure that","make sure",
+  "for example, today you had","was not","were not","did not","failed to",
+  "lack of","insufficient","not appropriate"
+];
+const STRENGTH_CUES = [
+  "well done","excellent","good job","demonstrated","confidently",
+  "independently","great","competently","successfully completed","impressive"
+];
+
+const CONDITION_QUESTION_BANK = {
+  epilepsy: "seizure type, frequency, the parent/patient's awareness of typical patterns, known triggers, aura/warning signs, time of last seizure, current medication and compliance, and the chairside emergency plan if a seizure occurs.",
+  seizure: "seizure type, frequency, known triggers, aura/warning signs, time of last seizure, current medication, and the chairside emergency plan.",
+  asthma: "frequency and severity of attacks, known triggers (e.g. cold air, anxiety), whether they carry a reliever inhaler, time of most recent attack, and current level of control.",
+  diabetes: "type (1 or 2), glycaemic control, history of hypoglycaemic episodes and how they're managed, time of last meal, and insulin/medication taken that day.",
+  allergy: "specific allergen(s), severity of past reactions (rash / swelling / anaphylaxis), whether they carry an epinephrine auto-injector, and details of the most recent exposure/reaction."
+};
 </script>
 </body>
 </html>
