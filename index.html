@@ -404,6 +404,39 @@ function renderCategorized(parsed){
   });
   document.getElementById('categorizedOut').innerHTML = html || '<div class="empty-msg">No content recognized.</div>';
 }
+
+function renderPriority(parsed){
+  const growthItems = parsed.filter(i=>i.sentiment==="growth" && i.category!=="general");
+  const byCat = {};
+  growthItems.forEach(item=>{
+    if(!byCat[item.category]) byCat[item.category]=[];
+    byCat[item.category].push(item);
+  });
+  const sortedCats = Object.keys(byCat).sort((a,b)=>CATEGORIES[a].priority - CATEGORIES[b].priority);
+  let html = "";
+  if(sortedCats.length===0){
+    html = '<div class="empty-msg">No clear action items were extracted from this feedback.</div>';
+  }
+  sortedCats.slice(0,5).forEach((key,idx)=>{
+    const meta = CATEGORIES[key];
+    const items = byCat[key];
+    let action = meta.actionTemplate;
+    if(key==="history_taking"){
+      const condItem = items.find(i=>i.condition);
+      if(condItem){
+        const bank = CONDITION_QUESTION_BANK[condItem.condition];
+        action = `For this patient with ${condItem.condition}, your next follow-up questions should cover: ${bank}`;
+      }
+    }
+    html += `<div class="priority-box">
+      <div class="rank">Priority ${idx+1} · ${meta.label}</div>
+      <div class="quote">${items.map(i=>escapeHtml(i.text)).join(' / ')}</div>
+      <div class="why">Why it matters: ${meta.rationale}</div>
+      <div class="action">👉 Action plan: ${action}</div>
+    </div>`;
+  });
+  document.getElementById('priorityOut').innerHTML = html;
+}
 </script>
 </body>
 </html>
