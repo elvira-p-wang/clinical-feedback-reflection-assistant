@@ -306,15 +306,32 @@ const CONDITION_QUESTION_BANK = {
    PARSING LOGIC
 --------------------------------------------------------- */
 function splitBullets(text){
-  let t = text.trim();
+  let t = text.trim().replace(/\r\n/g, "\n");
   if(!t) return [];
+
+  const bulletLineRe = /^[ \t]*(?:[•‣◦⁃∙]|[-*])\s+/m;
+  const numberedLineRe = /^[ \t]*\d+[.)]\s+/m;
+
   let parts;
+
   if(t.includes("•")){
+    // classic "• point • point" style, possibly all on one paragraph
     parts = t.split("•");
+  } else if(bulletLineRe.test(t) || numberedLineRe.test(t)){
+    // dash/asterisk/numbered lists, one item per line
+    parts = t.split(/\n(?=[ \t]*(?:[-*‣◦⁃∙]\s+|\d+[.)]\s+))/)
+             .map(p=>p.replace(/^[ \t]*(?:[-*‣◦⁃∙]|\d+[.)])\s+/, ""));
+  } else if(/\n\s*\n/.test(t)){
+    // blank-line-separated paragraphs (common when a teacher just writes free-flowing prose)
+    parts = t.split(/\n\s*\n+/);
   } else if(/\n/.test(t)){
+    // one point per line, no bullet characters
     parts = t.split(/\n+/);
   } else {
-    parts = t.split(/(?<=[.!?])\s+(?=[A-Z])/);
+    // single block of continuous prose with no line breaks at all:
+    // fall back to splitting on sentence boundaries, guarding against
+    // common abbreviations so we don't split mid-sentence on "e.g." etc.
+    parts = t.split(/(?<!e\.g\.)(?<!i\.e\.)(?<!etc\.)(?<!Dr\.)(?<!Mr\.)(?<!Mrs\.)(?<!Ms\.)(?<=[.!?])\s+(?=[A-Z])/);
   }
   return parts.map(p=>p.trim()).filter(p=>p.length>3);
 }
