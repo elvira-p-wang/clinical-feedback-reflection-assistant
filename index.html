@@ -301,6 +301,58 @@ const CONDITION_QUESTION_BANK = {
   diabetes: "type (1 or 2), glycaemic control, history of hypoglycaemic episodes and how they're managed, time of last meal, and insulin/medication taken that day.",
   allergy: "specific allergen(s), severity of past reactions (rash / swelling / anaphylaxis), whether they carry an epinephrine auto-injector, and details of the most recent exposure/reaction."
 };
+
+/* ---------------------------------------------------------
+   PARSING LOGIC
+--------------------------------------------------------- */
+function splitBullets(text){
+  let t = text.trim();
+  if(!t) return [];
+  let parts;
+  if(t.includes("•")){
+    parts = t.split("•");
+  } else if(/\n/.test(t)){
+    parts = t.split(/\n+/);
+  } else {
+    parts = t.split(/(?<=[.!?])\s+(?=[A-Z])/);
+  }
+  return parts.map(p=>p.trim()).filter(p=>p.length>3);
+}
+
+function classifyBullet(bullet){
+  const lower = bullet.toLowerCase();
+  let bestCat = null, bestScore = 0;
+  for(const key of CATEGORY_ORDER){
+    const cat = CATEGORIES[key];
+    let score = 0;
+    for(const kw of cat.keywords){
+      if(lower.includes(kw)) score++;
+    }
+    if(score > bestScore){
+      bestScore = score;
+      bestCat = key;
+    }
+  }
+  if(!bestCat || bestScore===0) bestCat = "general";
+
+  let sentiment = "context";
+  const hasGrowth = GROWTH_CUES.some(c=>lower.includes(c));
+  const hasStrength = STRENGTH_CUES.some(c=>lower.includes(c));
+  if(hasGrowth) sentiment = "growth";
+  else if(hasStrength) sentiment = "strength";
+
+  let condition = null;
+  for(const cond of Object.keys(CONDITION_QUESTION_BANK)){
+    if(lower.includes(cond)){ condition = cond; break; }
+  }
+
+  return { text: bullet, category: bestCat, sentiment, condition };
+}
+
+function parseFeedback(rawText){
+  const bullets = splitBullets(rawText);
+  return bullets.map(classifyBullet);
+}
 </script>
 </body>
 </html>
