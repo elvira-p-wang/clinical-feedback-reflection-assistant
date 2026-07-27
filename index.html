@@ -437,6 +437,82 @@ function renderPriority(parsed){
   });
   document.getElementById('priorityOut').innerHTML = html;
 }
+
+function shorten(str, maxLen){
+  str = str.trim();
+  if(str.length<=maxLen) return str;
+  const cut = str.slice(0,maxLen);
+  const lastSpace = cut.lastIndexOf(" ");
+  return (lastSpace>40 ? cut.slice(0,lastSpace) : cut) + "…";
+}
+
+function renderReflection(parsed, rawText){
+  const strengthItems = parsed.filter(i=>i.sentiment==="strength").map(i=>i.text);
+  const growthItems = parsed.filter(i=>i.sentiment==="growth");
+
+  const growthByCat = {};
+  growthItems.forEach(item=>{
+    if(item.category==="general") return;
+    if(!growthByCat[item.category]) growthByCat[item.category]=[];
+    growthByCat[item.category].push(item);
+  });
+  const sortedGrowthCats = Object.keys(growthByCat).sort((a,b)=>CATEGORIES[a].priority-CATEGORIES[b].priority);
+
+  let wentWell = strengthItems.length
+    ? strengthItems.map(t=>"- "+shorten(t,100)).join("\n")
+    : "- (Not explicitly praised this time — note what you think went well.)";
+
+  let growthLines = sortedGrowthCats.length
+    ? sortedGrowthCats.map((key,idx)=>{
+        const items = growthByCat[key];
+        const quote = shorten(items.map(i=>i.text).join(" "), 110);
+        return `${idx+1}. [${CATEGORIES[key].label}] ${quote}\n   → ${shorten(CATEGORIES[key].rationale,130)}`;
+      }).join("\n")
+    : "1. (No clear growth areas extracted from this feedback.)";
+
+  let actionPlan = sortedGrowthCats.length
+    ? sortedGrowthCats.map((key,idx)=>{
+        const items = growthByCat[key];
+        let action = CATEGORIES[key].actionTemplate;
+        if(key==="history_taking"){
+          const condItem = items.find(i=>i.condition);
+          if(condItem){
+            const bank = CONDITION_QUESTION_BANK[condItem.condition];
+            action = `For this patient with ${condItem.condition}, cover: ${bank}`;
+          }
+        }
+        return `${idx+1}. ${action}`;
+      }).join("\n")
+    : "1. (Add your own goal based on today's performance.)";
+
+  const today = new Date();
+  const dateStr = today.toISOString().slice(0,10);
+
+  const template =
+`Clinical Reflection — ${dateStr}
+
+WENT WELL
+${wentWell}
+
+NEEDS IMPROVEMENT (priority order)
+${growthLines}
+
+ACTION PLAN
+${actionPlan}
+
+FEELINGS
+(Fill in: how did this feedback land for you?)
+
+KEY TAKEAWAY
+(One sentence: what will you do differently next time?)
+`;
+
+  document.getElementById('reflectionOut').value = template;
+}
+
+function escapeHtml(s){
+  return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+}
 </script>
 </body>
 </html>
