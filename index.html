@@ -353,6 +353,57 @@ function parseFeedback(rawText){
   const bullets = splitBullets(rawText);
   return bullets.map(classifyBullet);
 }
+
+/* ---------------------------------------------------------
+   RENDERING
+--------------------------------------------------------- */
+let currentParsed = [];
+let currentRaw = "";
+
+function handleParse(){
+  const raw = document.getElementById('rawInput').value;
+  if(!raw.trim()){
+    showToast("Please paste feedback text first");
+    return;
+  }
+  currentRaw = raw;
+  currentParsed = parseFeedback(raw);
+  renderCategorized(currentParsed);
+  renderPriority(currentParsed);
+  renderReflection(currentParsed, raw);
+  document.getElementById('categorizedCard').style.display='block';
+  document.getElementById('priorityCard').style.display='block';
+  document.getElementById('reflectionCard').style.display='block';
+}
+
+function catMeta(key){
+  if(key==="general") return {label:"General", rationale:"", actionTemplate:"", priority:9};
+  return CATEGORIES[key];
+}
+
+function renderCategorized(parsed){
+  const grouped = {};
+  parsed.forEach(item=>{
+    if(!grouped[item.category]) grouped[item.category]=[];
+    grouped[item.category].push(item);
+  });
+  let html = "";
+  const orderedKeys = Object.keys(grouped).sort((a,b)=> (catMeta(a).priority||9) - (catMeta(b).priority||9));
+  orderedKeys.forEach(key=>{
+    const meta = catMeta(key);
+    html += `<div style="margin-bottom:16px;"><div style="font-weight:700;color:var(--navy);font-size:14px;margin-bottom:6px;">${meta.label}</div>`;
+    grouped[key].forEach(item=>{
+      const badgeClass = item.sentiment;
+      const badgeText = item.sentiment==="growth" ? "Growth Area" : item.sentiment==="strength" ? "Strength" : "Context";
+      html += `<div class="bullet-item ${badgeClass}">
+        <span class="badge ${badgeClass}">${badgeText}</span>
+        <span class="quote">${escapeHtml(item.text)}</span>
+      </div>`;
+    });
+    html += `</div>`;
+  });
+  document.getElementById('categorizedOut').innerHTML = html || '<div class="empty-msg">No content recognized.</div>';
+}
 </script>
 </body>
 </html>
