@@ -394,39 +394,62 @@ function parseFeedback(rawText){
 }
 
 /* ---------------------------------------------------------
-   TEXT CLEANUP + KEY-PHRASE EXTRACTION
-   (No AI/NLP here — just lightweight, transparent string rules so the
-   breakdown and reflection show the gist, not the full quote.)
+   TEXT CLEANUP
+   (No AI here — just lightweight, transparent string rules: fix a set of
+   common misspellings, strip stray symbols/control chars, and normalize
+   punctuation. The full point is always shown — this only tidies it up.)
 --------------------------------------------------------- */
 
+// A modest list of common misspellings seen in written feedback. Matched
+// whole-word, case-insensitive; the fix keeps the original capitalization.
+const COMMON_TYPOS = {
+  "medio-legal": "medico-legal",
+  "occured": "occurred",
+  "recieve": "receive",
+  "recieved": "received",
+  "seperate": "separate",
+  "seperately": "separately",
+  "untill": "until",
+  "wich": "which",
+  "definately": "definitely",
+  "accomodate": "accommodate",
+  "acheive": "achieve",
+  "begining": "beginning",
+  "enviroment": "environment",
+  "occassion": "occasion",
+  "referal": "referral",
+  "recomend": "recommend",
+  "recomended": "recommended",
+  "wether": "whether",
+  "neccessary": "necessary",
+  "goverment": "government",
+  "independant": "independent",
+  "managment": "management",
+  "profesionalism": "professionalism",
+  "appointmnet": "appointment",
+  "excellant": "excellent",
+  "similiar": "similar",
+  "reccommend": "recommend"
+};
+
+function fixTypos(str){
+  return str.replace(/[A-Za-z][A-Za-z-]*/g, word=>{
+    const fix = COMMON_TYPOS[word.toLowerCase()];
+    if(!fix) return word;
+    const firstIsUpper = word.charAt(0) === word.charAt(0).toUpperCase() && /[A-Za-z]/.test(word.charAt(0));
+    return firstIsUpper ? fix.charAt(0).toUpperCase() + fix.slice(1) : fix;
+  });
+}
+
 function cleanText(str){
-  return str
+  return fixTypos(str
     .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, " ")   // stray control chars
     .replace(/[“”]/g, '"').replace(/[‘’]/g, "'")   // smart quotes -> plain
     .replace(/\s*[–—]\s*/g, " — ")   // normalize dashes
     .replace(/\.{2,}/g, ".").replace(/\?{2,}/g, "?").replace(/!{2,}/g, "!")   // repeated punctuation
     .replace(/\s+/g, " ")
     .replace(/^[\s.,;:\-–—]+/, "")
-    .trim();
-}
-
-// Filler openers that add no content when trimming to a key phrase.
-const FILLER_PREFIXES = [
-  "please ensure that ", "please ensure ", "for example, ", "however, ", "however ",
-  "also, ", "additionally, ", "note that ", "consider that ", "consider "
-];
-
-function keyPhrase(str, maxLen){
-  let s = cleanText(str);
-  const lower = s.toLowerCase();
-  for(const prefix of FILLER_PREFIXES){
-    if(lower.startsWith(prefix)){
-      s = s.slice(prefix.length);
-      s = s.charAt(0).toUpperCase() + s.slice(1);
-      break;
-    }
-  }
-  return shorten(s, maxLen);
+    .trim());
 }
 
 /* ---------------------------------------------------------
@@ -472,7 +495,7 @@ function renderCategorized(parsed){
       const badgeText = item.sentiment==="growth" ? "Growth Area" : item.sentiment==="strength" ? "Strength" : "Context";
       html += `<div class="bullet-item ${badgeClass}">
         <span class="badge ${badgeClass}">${badgeText}</span>
-        <span class="quote">${escapeHtml(keyPhrase(item.text, 95))}</span>
+        <span class="quote">${escapeHtml(cleanText(item.text))}</span>
       </div>`;
     });
     html += `</div>`;
@@ -505,7 +528,7 @@ function renderPriority(parsed){
     }
     html += `<div class="priority-box">
       <div class="rank">Priority ${idx+1} · ${meta.label}</div>
-      <div class="quote">${items.map(i=>escapeHtml(keyPhrase(i.text, 100))).join(' / ')}</div>
+      <div class="quote">${items.map(i=>escapeHtml(cleanText(i.text))).join(' / ')}</div>
       <div class="why">Why it matters: ${meta.rationale}</div>
       <div class="action">👉 Action plan: ${action}</div>
     </div>`;
@@ -534,14 +557,14 @@ function renderReflection(parsed, rawText){
   const sortedGrowthCats = Object.keys(growthByCat).sort((a,b)=>CATEGORIES[a].priority-CATEGORIES[b].priority);
 
   let wentWell = strengthItems.length
-    ? strengthItems.map(t=>"- "+keyPhrase(t,70)).join("\n")
+    ? strengthItems.map(t=>"- "+shorten(cleanText(t),100)).join("\n")
     : "- (Not explicitly praised this time — note what you think went well.)";
 
   let growthLines = sortedGrowthCats.length
     ? sortedGrowthCats.map((key,idx)=>{
         const items = growthByCat[key];
-        const quote = keyPhrase(items.map(i=>i.text).join(" "), 70);
-        return `${idx+1}. [${CATEGORIES[key].label}] ${quote} — ${CATEGORIES[key].shortRationale}`;
+        const quote = shorten(cleanText(items.map(i=>i.text).join(" ")), 110);
+        return `${idx+1}. [${CATEGORIES[key].label}] ${quote}\n   → ${shorten(CATEGORIES[key].rationale,130)}`;
       }).join("\n")
     : "1. (No clear growth areas extracted from this feedback.)";
 
