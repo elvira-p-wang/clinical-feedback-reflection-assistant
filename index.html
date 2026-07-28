@@ -264,7 +264,7 @@ const CATEGORIES = {
   },
   clinical_skills: {
     label: "Clinical Skills & Treatment Planning",
-    keywords: ["examination","exam","diagnosis","treatment plan","treatment planning","care plan","management plan","intervention","clinical findings","radiograph","x-ray","restoration","extraction","anaesthesia","anesthetic","procedure","limited examination","reassessment"],
+    keywords: ["examination","exam","diagnosis","treatment plan","treatment planning","care plan","management plan","intervention","clinical findings","radiograph","x-ray","restoration","extraction","anaesthesia","anesthetic","procedure","limited examination","reassessment","technique","instrument","pressure","scaling","polishing"],
     rationale: "Systematic clinical examination, assessment, and treatment/care planning are the foundation of safe, evidence-based practice in any clinical discipline.",
     shortRationale: "Core clinical competency",
     actionTemplate: "Review the clinical protocol/checklist for the assessment or planning step that was limited today, and rehearse it before your next similarly complex case.",
@@ -307,7 +307,9 @@ const GROWTH_CUES = [
   "reduce accidentally","continue developing","continue to develop",
   "keep developing","keep working on","improve ","could be","more clearly",
   "more confidently","more thoroughly","more consistently","more effectively",
-  "work on ","aim to"
+  "work on ","aim to","too much pressure","too much force","excessive pressure",
+  "excessive force","excessive rotational","area to refine","areas to refine",
+  "refine your","unnecessarily","suggests too much","wore through","to refine is"
 ];
 const STRENGTH_CUES = [
   "well done","excellent","good job","demonstrated","confidently",
@@ -501,7 +503,12 @@ function handleParse(){
 }
 
 function catMeta(key){
-  if(key==="general") return {label:"General", rationale:"", actionTemplate:"", priority:9};
+  if(key==="general") return {
+    label: "General",
+    rationale: "This point didn't match a specific category, but it was still flagged as something to act on — don't let it fall through the cracks just because it's harder to label.",
+    actionTemplate: "Reread this point carefully and note the specific action it's asking you to take before your next session.",
+    priority: 9
+  };
   return CATEGORIES[key];
 }
 
@@ -530,19 +537,19 @@ function renderCategorized(parsed){
 }
 
 function renderPriority(parsed){
-  const growthItems = parsed.filter(i=>i.sentiment==="growth" && i.category!=="general");
+  const growthItems = parsed.filter(i=>i.sentiment==="growth");
   const byCat = {};
   growthItems.forEach(item=>{
     if(!byCat[item.category]) byCat[item.category]=[];
     byCat[item.category].push(item);
   });
-  const sortedCats = Object.keys(byCat).sort((a,b)=>CATEGORIES[a].priority - CATEGORIES[b].priority);
+  const sortedCats = Object.keys(byCat).sort((a,b)=>catMeta(a).priority - catMeta(b).priority);
   let html = "";
   if(sortedCats.length===0){
     html = '<div class="empty-msg">No clear action items were extracted from this feedback.</div>';
   }
-  sortedCats.slice(0,5).forEach((key,idx)=>{
-    const meta = CATEGORIES[key];
+  sortedCats.slice(0,6).forEach((key,idx)=>{
+    const meta = catMeta(key);
     const items = byCat[key];
     let action = meta.actionTemplate;
     if(key==="history_taking"){
@@ -576,11 +583,10 @@ function renderReflection(parsed, rawText){
 
   const growthByCat = {};
   growthItems.forEach(item=>{
-    if(item.category==="general") return;
     if(!growthByCat[item.category]) growthByCat[item.category]=[];
     growthByCat[item.category].push(item);
   });
-  const sortedGrowthCats = Object.keys(growthByCat).sort((a,b)=>CATEGORIES[a].priority-CATEGORIES[b].priority);
+  const sortedGrowthCats = Object.keys(growthByCat).sort((a,b)=>catMeta(a).priority-catMeta(b).priority);
 
   let wentWell = strengthItems.length
     ? strengthItems.map(t=>"- "+shorten(cleanText(t),100)).join("\n")
@@ -590,14 +596,14 @@ function renderReflection(parsed, rawText){
     ? sortedGrowthCats.map((key,idx)=>{
         const items = growthByCat[key];
         const quote = shorten(cleanText(items.map(i=>i.text).join(" ")), 110);
-        return `${idx+1}. [${CATEGORIES[key].label}] ${quote}\n   → ${shorten(CATEGORIES[key].rationale,130)}`;
+        return `${idx+1}. [${catMeta(key).label}] ${quote}\n   → ${shorten(catMeta(key).rationale,130)}`;
       }).join("\n")
     : "1. (No clear growth areas extracted from this feedback.)";
 
   let actionPlan = sortedGrowthCats.length
     ? sortedGrowthCats.map((key,idx)=>{
         const items = growthByCat[key];
-        let action = CATEGORIES[key].actionTemplate;
+        let action = catMeta(key).actionTemplate;
         if(key==="history_taking"){
           const condItem = items.find(i=>i.condition);
           if(condItem){
