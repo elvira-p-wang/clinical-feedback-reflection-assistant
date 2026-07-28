@@ -232,7 +232,7 @@
 const CATEGORIES = {
   professionalism: {
     label: "Professionalism & Compliance",
-    keywords: ["professionalism","breach","footwear","shoes","dress code","uniform","punctual","late","policy","lhd","attire","ppe","infection control","hand hygiene","confidentiality","consent"],
+    keywords: ["professionalism","breach","footwear","shoes","dress code","uniform","punctual","late","policy","lhd","attire","ppe","infection control","hand hygiene","confidentiality","consent","protocol","safety protocol","standard precautions"],
     rationale: "Professional presentation and policy compliance (dress code, PPE, hand hygiene, confidentiality) relate directly to infection control and workplace accountability — a core marker of professional conduct on any placement.",
     shortRationale: "Compliance & infection-control risk",
     actionTemplate: "Check your placement site's dress code / policy before every session, and make sure you're fully compliant (attire, PPE, hand hygiene). Add this to your pre-shift checklist.",
@@ -272,7 +272,7 @@ const CATEGORIES = {
   },
   patient_communication: {
     label: "Patient & Family Communication",
-    keywords: ["parent","family","carer","discussion","advice","recommendations","rapport","explain","behaviour management","behavior management","anxious","communication","active listening"],
+    keywords: ["parent","family","carer","discussion","advice","recommendations","rapport","explain","behaviour management","behavior management","anxious","communicat","active listening","multidisciplinary","interdisciplinary","handoff communication","listening skills"],
     rationale: "Clear communication with patients and their families or carers builds trust and ensures recommendations are understood and followed through on.",
     shortRationale: "Trust & understanding at stake",
     actionTemplate: "In your next patient interaction, explicitly note what you explained, why you recommended it, and how you confirmed they understood.",
@@ -288,10 +288,10 @@ const CATEGORIES = {
   },
   time_case_management: {
     label: "Case Complexity & Time Management",
-    keywords: ["limited","unable","complex","could not","learning experience","patient management","time-pressured","workload","time management","ran out of time","rushed"],
-    rationale: "Complex or uncooperative cases that limit assessment/treatment are themselves an important case-management learning opportunity.",
+    keywords: ["limited","unable","complex","could not","learning experience","patient management","time-pressured","workload","time management","ran out of time","rushed","prioriti","busy shift","caseload","multitask"],
+    rationale: "Complex or high-volume caseloads that limit assessment/treatment, delay documentation, or force on-the-spot prioritisation decisions are themselves an important case-management learning opportunity.",
     shortRationale: "Case-management learning opportunity",
-    actionTemplate: "For complex or uncooperative patients, prepare alternative strategies in advance (e.g. splitting the session, behaviour management techniques, asking for support earlier).",
+    actionTemplate: "Before your next busy shift, plan how you'll triage competing demands (e.g. a quick priority list at handover, blocking protected time for documentation, flagging early when you're at capacity) rather than deciding in the moment.",
     priority: 8
   }
 };
@@ -309,7 +309,14 @@ const GROWTH_CUES = [
   "more confidently","more thoroughly","more consistently","more effectively",
   "work on ","aim to","too much pressure","too much force","excessive pressure",
   "excessive force","excessive rotational","area to refine","areas to refine",
-  "refine your","unnecessarily","suggests too much","wore through","to refine is"
+  "refine your","unnecessarily","suggests too much","wore through","to refine is",
+  "continuing to develop","recommend continuing","recommend developing",
+  "became challenging","resulting in delayed","struggled with","found it difficult",
+  "difficulty with","needs more practice","requires further","would benefit from",
+  "needs improvement","needs to improve","needs to work on","room for improvement",
+  "opportunity to improve","challenging at times","fell short","below expectation",
+  "not yet consistent","inconsistent","hesitant","hesitated","forgot to","missed the",
+  "overlooked","slow to","delay in","delayed in"
 ];
 const STRENGTH_CUES = [
   "well done","excellent","good job","demonstrated","confidently",
@@ -317,7 +324,15 @@ const STRENGTH_CUES = [
   "completed well","managed well","done well","very good","nicely done",
   "well managed","good coverage","good understanding","well executed",
   "good technique","managed to smooth well","good rapport","established good",
-  "established rapport","maintained clear","steady progress","showed steady"
+  "established rapport","maintained clear","steady progress","showed steady",
+  "followed safety","followed protocol","followed the protocol",
+  "followed appropriate","adhered to","in line with best practice",
+  "appropriately managed","correctly identified","accurately completed",
+  "safely administered","communicated effectively","effectively managed",
+  "consistently demonstrated","strong understanding","thorough understanding",
+  "solid grasp","proactively","took initiative","good initiative",
+  "handled well","responded appropriately","appropriate response",
+  "clear and concise","professional manner","positive feedback from"
 ];
 
 const CONDITION_QUESTION_BANK = {
@@ -506,6 +521,7 @@ function catMeta(key){
   if(key==="general") return {
     label: "General",
     rationale: "This point didn't match a specific category, but it was still flagged as something to act on — don't let it fall through the cracks just because it's harder to label.",
+    shortRationale: "Worth acting on, even unlabeled",
     actionTemplate: "Reread this point carefully and note the specific action it's asking you to take before your next session.",
     priority: 9
   };
@@ -588,28 +604,33 @@ function renderReflection(parsed, rawText){
   });
   const sortedGrowthCats = Object.keys(growthByCat).sort((a,b)=>catMeta(a).priority-catMeta(b).priority);
 
+  // Full sentences, not mid-word truncations — a short complete thought
+  // beats a long one chopped off with "…".
   let wentWell = strengthItems.length
-    ? strengthItems.map(t=>"- "+shorten(cleanText(t),100)).join("\n")
+    ? strengthItems.map(t=>"- "+cleanText(t)).join("\n")
     : "- (Not explicitly praised this time — note what you think went well.)";
 
-  // Grouped by category for readability, but every single item is listed —
-  // nothing gets merged into one line and truncated away.
+  // Grouped by category for readability, but every single item is listed in
+  // full — nothing gets merged into one line and truncated away. The header
+  // uses the short (already concise, already complete) rationale phrase
+  // instead of chopping the long rationale sentence mid-way.
   let growthLines = sortedGrowthCats.length
     ? sortedGrowthCats.map(key=>{
         const items = growthByCat[key];
-        const bullets = items.map(i=>"  - "+shorten(cleanText(i.text),120)).join("\n");
-        return `[${catMeta(key).label}] — ${shorten(catMeta(key).rationale,120)}\n${bullets}`;
+        const bullets = items.map(i=>"  - "+cleanText(i.text)).join("\n");
+        return `[${catMeta(key).label}] — ${catMeta(key).shortRationale}\n${bullets}`;
       }).join("\n\n")
     : "(No clear growth areas extracted from this feedback.)";
 
   // One action per growth item (not one per category) — every item you need
-  // to act on gets its own numbered step.
+  // to act on gets its own numbered step. No "Re:" wrapper, no quote marks,
+  // no truncation: the item's own full sentence is the lead line, the
+  // strategy follows on the next line.
   const sortedGrowthItems = growthItems.slice().sort((a,b)=>catMeta(a.category).priority-catMeta(b.category).priority);
   let actionPlan = sortedGrowthItems.length
     ? sortedGrowthItems.map((item,idx)=>{
         const action = actionFor(item);
-        const ref = shorten(cleanText(item.text), 60);
-        return `${idx+1}. Re: "${ref}"\n   → ${action}`;
+        return `${idx+1}. ${cleanText(item.text)}\n   → ${action}`;
       }).join("\n")
     : "1. (Add your own goal based on today's performance.)";
 
