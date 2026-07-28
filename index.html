@@ -622,16 +622,23 @@ function renderReflection(parsed, rawText){
       }).join("\n\n")
     : "(No clear growth areas extracted from this feedback.)";
 
-  // One action per growth item (not one per category) — every item you need
-  // to act on gets its own numbered step. No "Re:" wrapper, no quote marks,
-  // no truncation: the item's own full sentence is the lead line, the
-  // strategy follows on the next line.
+  // ACTION PLAN talks about actions only — the item's own text already
+  // appears above under NEEDS IMPROVEMENT, so it isn't repeated here.
+  // Duplicate actions (e.g. two items landing in the same category with the
+  // same generic strategy) are collapsed to one line instead of printing
+  // the identical sentence twice.
   const sortedGrowthItems = growthItems.slice().sort((a,b)=>catMeta(a.category).priority-catMeta(b.category).priority);
-  let actionPlan = sortedGrowthItems.length
-    ? sortedGrowthItems.map((item,idx)=>{
-        const action = actionFor(item);
-        return `${idx+1}. ${cleanText(item.text)}\n   → ${action}`;
-      }).join("\n")
+  const seenActions = new Set();
+  const uniqueActions = [];
+  sortedGrowthItems.forEach(item=>{
+    const action = actionFor(item);
+    if(!seenActions.has(action)){
+      seenActions.add(action);
+      uniqueActions.push(action);
+    }
+  });
+  let actionPlan = uniqueActions.length
+    ? uniqueActions.map((action,idx)=>`${idx+1}. ${action}`).join("\n")
     : "1. (Add your own goal based on today's performance.)";
 
   const today = new Date();
