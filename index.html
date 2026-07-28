@@ -256,7 +256,7 @@ const CATEGORIES = {
   },
   documentation: {
     label: "Documentation & Medico-legal Notes",
-    keywords: ["notes","documentation","record","medico-legal","medico legal","treatment notes","write detailed notes","reflect your appointment","appointment notes","handover"],
+    keywords: ["notes","documentation","record","medico-legal","medico legal","treatment notes","write detailed notes","reflect your appointment","appointment notes","handover","patient file","chart","charting"],
     rationale: "Clinical notes are a medico-legal record. They must accurately capture findings, the content of discussions with the patient/family, the advice given and why, and the plan going forward.",
     shortRationale: "Medico-legal record accuracy",
     actionTemplate: "Immediately after each patient interaction, before finishing your shift or session, write notes covering: findings, what was discussed, advice/recommendations given and the reasoning, and the plan going forward.",
@@ -264,7 +264,7 @@ const CATEGORIES = {
   },
   clinical_skills: {
     label: "Clinical Skills & Treatment Planning",
-    keywords: ["examination","exam","diagnosis","treatment plan","treatment planning","care plan","management plan","intervention","clinical findings","radiograph","x-ray","restoration","extraction","anaesthesia","anesthetic","procedure","limited examination","reassessment","technique","instrument","pressure","scaling","polishing"],
+    keywords: ["examination","exam","diagnosis","treatment plan","treatment planning","care plan","management plan","intervention","clinical findings","radiograph","radiographically","x-ray","restoration","restore","extraction","anaesthesia","anesthetic","procedure","limited examination","reassessment","technique","instrument","pressure","scaling","polishing","cone position","angulation","cone cutting","fissure","gingiva","margins","excess material","spoon excavator","overlap","retake","tooth surface","overhang"],
     rationale: "Systematic clinical examination, assessment, and treatment/care planning are the foundation of safe, evidence-based practice in any clinical discipline.",
     shortRationale: "Core clinical competency",
     actionTemplate: "Review the clinical protocol/checklist for the assessment or planning step that was limited today, and rehearse it before your next similarly complex case.",
@@ -272,7 +272,7 @@ const CATEGORIES = {
   },
   patient_communication: {
     label: "Patient & Family Communication",
-    keywords: ["parent","family","carer","discussion","advice","recommendations","rapport","explain","behaviour management","behavior management","anxious","communication"],
+    keywords: ["parent","family","carer","discussion","advice","recommendations","rapport","explain","behaviour management","behavior management","anxious","communication","active listening"],
     rationale: "Clear communication with patients and their families or carers builds trust and ensures recommendations are understood and followed through on.",
     shortRationale: "Trust & understanding at stake",
     actionTemplate: "In your next patient interaction, explicitly note what you explained, why you recommended it, and how you confirmed they understood.",
@@ -536,32 +536,32 @@ function renderCategorized(parsed){
   document.getElementById('categorizedOut').innerHTML = html || '<div class="empty-msg">No content recognized.</div>';
 }
 
+// Action text for a single growth item (not a category) — every item gets
+// its own action, not just every category.
+function actionFor(item){
+  const meta = catMeta(item.category);
+  if(item.category==="history_taking" && item.condition){
+    const bank = CONDITION_QUESTION_BANK[item.condition];
+    return `For this patient with ${item.condition}, cover: ${bank}`;
+  }
+  return meta.actionTemplate;
+}
+
 function renderPriority(parsed){
   const growthItems = parsed.filter(i=>i.sentiment==="growth");
-  const byCat = {};
-  growthItems.forEach(item=>{
-    if(!byCat[item.category]) byCat[item.category]=[];
-    byCat[item.category].push(item);
-  });
-  const sortedCats = Object.keys(byCat).sort((a,b)=>catMeta(a).priority - catMeta(b).priority);
+  const sorted = growthItems.slice().sort((a,b)=>catMeta(a.category).priority - catMeta(b.category).priority);
   let html = "";
-  if(sortedCats.length===0){
+  if(sorted.length===0){
     html = '<div class="empty-msg">No clear action items were extracted from this feedback.</div>';
   }
-  sortedCats.slice(0,6).forEach((key,idx)=>{
-    const meta = catMeta(key);
-    const items = byCat[key];
-    let action = meta.actionTemplate;
-    if(key==="history_taking"){
-      const condItem = items.find(i=>i.condition);
-      if(condItem){
-        const bank = CONDITION_QUESTION_BANK[condItem.condition];
-        action = `For this patient with ${condItem.condition}, your next follow-up questions should cover: ${bank}`;
-      }
-    }
+  // Every growth item gets its own box and its own action — nothing gets
+  // bundled together and silently dropped.
+  sorted.forEach((item,idx)=>{
+    const meta = catMeta(item.category);
+    const action = actionFor(item);
     html += `<div class="priority-box">
       <div class="rank">Priority ${idx+1} · ${meta.label}</div>
-      <div class="quote">${items.map(i=>escapeHtml(cleanText(i.text))).join(' / ')}</div>
+      <div class="quote">${escapeHtml(cleanText(item.text))}</div>
       <div class="why">Why it matters: ${meta.rationale}</div>
       <div class="action">👉 Action plan: ${action}</div>
     </div>`;
@@ -592,26 +592,24 @@ function renderReflection(parsed, rawText){
     ? strengthItems.map(t=>"- "+shorten(cleanText(t),100)).join("\n")
     : "- (Not explicitly praised this time — note what you think went well.)";
 
+  // Grouped by category for readability, but every single item is listed —
+  // nothing gets merged into one line and truncated away.
   let growthLines = sortedGrowthCats.length
-    ? sortedGrowthCats.map((key,idx)=>{
+    ? sortedGrowthCats.map(key=>{
         const items = growthByCat[key];
-        const quote = shorten(cleanText(items.map(i=>i.text).join(" ")), 110);
-        return `${idx+1}. [${catMeta(key).label}] ${quote}\n   → ${shorten(catMeta(key).rationale,130)}`;
-      }).join("\n")
-    : "1. (No clear growth areas extracted from this feedback.)";
+        const bullets = items.map(i=>"  - "+shorten(cleanText(i.text),120)).join("\n");
+        return `[${catMeta(key).label}] — ${shorten(catMeta(key).rationale,120)}\n${bullets}`;
+      }).join("\n\n")
+    : "(No clear growth areas extracted from this feedback.)";
 
-  let actionPlan = sortedGrowthCats.length
-    ? sortedGrowthCats.map((key,idx)=>{
-        const items = growthByCat[key];
-        let action = catMeta(key).actionTemplate;
-        if(key==="history_taking"){
-          const condItem = items.find(i=>i.condition);
-          if(condItem){
-            const bank = CONDITION_QUESTION_BANK[condItem.condition];
-            action = `For this patient with ${condItem.condition}, cover: ${bank}`;
-          }
-        }
-        return `${idx+1}. ${action}`;
+  // One action per growth item (not one per category) — every item you need
+  // to act on gets its own numbered step.
+  const sortedGrowthItems = growthItems.slice().sort((a,b)=>catMeta(a.category).priority-catMeta(b.category).priority);
+  let actionPlan = sortedGrowthItems.length
+    ? sortedGrowthItems.map((item,idx)=>{
+        const action = actionFor(item);
+        const ref = shorten(cleanText(item.text), 60);
+        return `${idx+1}. Re: "${ref}"\n   → ${action}`;
       }).join("\n")
     : "1. (Add your own goal based on today's performance.)";
 
