@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Clinical Feedback Reflection Assistant</title>
+<title>Clinical Feedback to Action</title>
 <style>
   :root{
     --navy:#1c3d5a;
@@ -168,13 +168,13 @@
 <div class="wrap">
 
   <header class="top">
-    <h1>🦷 Clinical Feedback Reflection Assistant</h1>
-    <p>Paste feedback from your CE / Clinical Educator, get it auto-categorized, and generate a structured, high-quality reflective journal draft.</p>
+    <h1>🩺 Clinical Feedback to Action</h1>
+    <p>Paste feedback from your Clinical Educator, preceptor, or supervisor — nursing, physio, OT, pharmacy, dentistry, medicine, any placement — and get it auto-categorized into a prioritized, reflective action plan.</p>
   </header>
 
   <div class="card">
     <h2><span class="num">1</span>Paste Raw Feedback</h2>
-    <textarea id="rawInput" placeholder="Paste your CE / Educator's raw feedback here, e.g. bullet-pointed comments beginning with •"></textarea>
+    <textarea id="rawInput" placeholder="Paste your Clinical Educator's / preceptor's raw feedback here, e.g. bullet-pointed comments beginning with •"></textarea>
     <div class="btnrow">
       <button onclick="handleParse()">🔍 Parse &amp; Generate Reflection</button>
       <button class="secondary" onclick="loadSample()">Load Sample</button>
@@ -185,13 +185,13 @@
 
   <div class="card" id="categorizedCard" style="display:none;">
     <h2><span class="num">2</span>Categorized Breakdown</h2>
-    <div class="section-note">Grouped by theme and tagged as <span class="badge growth">Growth Area</span> <span class="badge strength">Strength</span> <span class="badge context">Context</span></div>
+    <div class="section-note">Distilled to the key point per item — grouped by theme and tagged as <span class="badge growth">Growth Area</span> <span class="badge strength">Strength</span> <span class="badge context">Context</span></div>
     <div id="categorizedOut"></div>
   </div>
 
   <div class="card" id="priorityCard" style="display:none;">
     <h2><span class="num">3</span>Top Priority Actions</h2>
-    <div class="section-note">Ranked by urgency (compliance / medico-legal &gt; medical safety &gt; clinical skills &gt; other)</div>
+    <div class="section-note">Ranked by urgency (compliance &amp; safety escalation &gt; medical history &amp; documentation &gt; clinical skills &gt; other)</div>
     <div id="priorityOut"></div>
   </div>
 
@@ -232,52 +232,67 @@
 const CATEGORIES = {
   professionalism: {
     label: "Professionalism & Compliance",
-    keywords: ["professionalism","breach","footwear","shoes","dress code","uniform","punctual","late","policy","lhd","attire","ppe","infection control"],
-    rationale: "Professional presentation and dress-code compliance (e.g. closed leather shoes) relate directly to infection control, sharps-injury protection, and clinic/LHD policy — it's a core marker of professional accountability.",
-    actionTemplate: "Check your placement site's dress code / policy before every session, and make sure you're wearing compliant closed leather or leather-like shoes. Add this to your pre-clinic checklist.",
+    keywords: ["professionalism","breach","footwear","shoes","dress code","uniform","punctual","late","policy","lhd","attire","ppe","infection control","hand hygiene","confidentiality","consent"],
+    rationale: "Professional presentation and policy compliance (dress code, PPE, hand hygiene, confidentiality) relate directly to infection control and workplace accountability — a core marker of professional conduct on any placement.",
+    shortRationale: "Compliance & infection-control risk",
+    actionTemplate: "Check your placement site's dress code / policy before every session, and make sure you're fully compliant (attire, PPE, hand hygiene). Add this to your pre-shift checklist.",
     priority: 1
+  },
+  patient_safety_escalation: {
+    label: "Patient Safety & Escalation",
+    keywords: ["escalate","escalation","deteriorat","red flag","safety net","safety-netting","notify","alert supervisor","urgent","emergency","report immediately","failed to escalate","did not escalate","risk assessment","near miss","incident"],
+    rationale: "Recognizing a safety concern and escalating it promptly — to a supervisor, senior, or emergency pathway — is one of the most safety-critical skills on any clinical placement, regardless of discipline.",
+    shortRationale: "Safety-critical — escalate promptly",
+    actionTemplate: "Review your workplace's escalation pathway (who to notify, how urgently, what to document) and rehearse it so it's automatic under pressure.",
+    priority: 2
   },
   history_taking: {
     label: "History Taking & Medical Complexity",
     keywords: ["medical history","follow-up question","follow up question","epilepsy","seizure","asthma","diabetes","allergy","medication","condition","complex medical history","tolerate","autism","asd","anxiety","cerebral palsy","congenital","bleeding disorder","immunocompromised"],
-    rationale: "Detailed follow-up questioning on complex medical conditions (type, frequency, triggers, warning signs, emergency plan) is essential for chairside risk assessment and emergency preparedness.",
-    actionTemplate: "Prepare a condition-specific follow-up question checklist and review it before your next appointment involving this medical history.",
-    priority: 2
+    rationale: "Detailed follow-up questioning on complex medical conditions (type, frequency, triggers, warning signs, emergency plan) is essential for point-of-care risk assessment and emergency preparedness.",
+    shortRationale: "Risk assessment & emergency prep",
+    actionTemplate: "Prepare a condition-specific follow-up question checklist and review it before your next patient with this medical history.",
+    priority: 3
   },
   documentation: {
     label: "Documentation & Medico-legal Notes",
-    keywords: ["notes","documentation","record","medico-legal","medico legal","treatment notes","write detailed notes","reflect your appointment","appointment notes"],
-    rationale: "Clinical notes are a medico-legal record. They must accurately capture examination findings, the content of discussions with the patient/parent, the advice given and why, and the plan for next visit.",
-    actionTemplate: "Immediately after each appointment, before leaving clinic, write notes covering: findings, what was discussed with the patient/parent, advice/recommendations given and the reasoning, and the plan for next appointment.",
-    priority: 2
+    keywords: ["notes","documentation","record","medico-legal","medico legal","treatment notes","write detailed notes","reflect your appointment","appointment notes","handover"],
+    rationale: "Clinical notes are a medico-legal record. They must accurately capture findings, the content of discussions with the patient/family, the advice given and why, and the plan going forward.",
+    shortRationale: "Medico-legal record accuracy",
+    actionTemplate: "Immediately after each patient interaction, before finishing your shift or session, write notes covering: findings, what was discussed, advice/recommendations given and the reasoning, and the plan going forward.",
+    priority: 4
   },
   clinical_skills: {
     label: "Clinical Skills & Treatment Planning",
-    keywords: ["examination","exam","diagnosis","treatment plan","treatment planning","clinical findings","radiograph","x-ray","restoration","extraction","anaesthesia","anesthetic","procedure","limited examination"],
-    rationale: "Systematic clinical examination and treatment planning are the foundation of safe, evidence-based dental care.",
-    actionTemplate: "Review the clinical protocol/checklist for the examination or treatment planning step that was limited today, and rehearse it before your next similarly complex case.",
-    priority: 3
+    keywords: ["examination","exam","diagnosis","treatment plan","treatment planning","care plan","management plan","intervention","clinical findings","radiograph","x-ray","restoration","extraction","anaesthesia","anesthetic","procedure","limited examination","reassessment"],
+    rationale: "Systematic clinical examination, assessment, and treatment/care planning are the foundation of safe, evidence-based practice in any clinical discipline.",
+    shortRationale: "Core clinical competency",
+    actionTemplate: "Review the clinical protocol/checklist for the assessment or planning step that was limited today, and rehearse it before your next similarly complex case.",
+    priority: 5
   },
   patient_communication: {
-    label: "Patient & Parent Communication",
-    keywords: ["parent","discussion","advice","recommendations","rapport","explain","behaviour management","behavior management","anxious","communication"],
-    rationale: "Clear communication with patients and parents builds trust and ensures recommendations are understood and followed through on.",
-    actionTemplate: "In your next patient interaction, explicitly note what you explained to the patient/parent, why you recommended it, and how you confirmed they understood.",
-    priority: 4
+    label: "Patient & Family Communication",
+    keywords: ["parent","family","carer","discussion","advice","recommendations","rapport","explain","behaviour management","behavior management","anxious","communication"],
+    rationale: "Clear communication with patients and their families or carers builds trust and ensures recommendations are understood and followed through on.",
+    shortRationale: "Trust & understanding at stake",
+    actionTemplate: "In your next patient interaction, explicitly note what you explained, why you recommended it, and how you confirmed they understood.",
+    priority: 6
   },
-  oral_hygiene_preventive: {
-    label: "Oral Hygiene & Preventive Advice",
-    keywords: ["oral hygiene","ohi","dietary advice","diet","preventive","fluoride","brushing"],
-    rationale: "Individualized oral hygiene and dietary advice is a core part of preventive dental care.",
-    actionTemplate: "Try delivering the oral hygiene / dietary advice component independently next time, relying less on CE assistance, and document the specific advice you gave.",
-    priority: 5
+  patient_education_preventive: {
+    label: "Patient Education & Preventive Advice",
+    keywords: ["oral hygiene","ohi","dietary advice","diet","preventive","fluoride","brushing","patient education","home exercise","home program","self-management","lifestyle advice","medication counselling","discharge advice","discharge planning"],
+    rationale: "Personalized patient education — preventive advice, home programs, or self-management strategies — is core to patient-centered care across every discipline.",
+    shortRationale: "Patient education follow-through",
+    actionTemplate: "Try delivering this patient education independently next time, relying less on supervisor assistance, and document the specific advice you gave.",
+    priority: 7
   },
   time_case_management: {
     label: "Case Complexity & Time Management",
-    keywords: ["limited","unable","complex","could not","learning experience","patient management"],
-    rationale: "Complex or uncooperative cases that limit examination/treatment are themselves an important case-management learning opportunity.",
-    actionTemplate: "For complex or uncooperative patients, prepare alternative strategies in advance (e.g. splitting the visit across appointments, behaviour management techniques).",
-    priority: 6
+    keywords: ["limited","unable","complex","could not","learning experience","patient management","time-pressured","workload","time management","ran out of time","rushed"],
+    rationale: "Complex or uncooperative cases that limit assessment/treatment are themselves an important case-management learning opportunity.",
+    shortRationale: "Case-management learning opportunity",
+    actionTemplate: "For complex or uncooperative patients, prepare alternative strategies in advance (e.g. splitting the session, behaviour management techniques, asking for support earlier).",
+    priority: 8
   }
 };
 
@@ -328,12 +343,19 @@ function splitBullets(text){
     // one point per line, no bullet characters
     parts = t.split(/\n+/);
   } else {
-    // single block of continuous prose with no line breaks at all:
-    // fall back to splitting on sentence boundaries, guarding against
-    // common abbreviations so we don't split mid-sentence on "e.g." etc.
-    parts = t.split(/(?<!e\.g\.)(?<!i\.e\.)(?<!etc\.)(?<!Dr\.)(?<!Mr\.)(?<!Mrs\.)(?<!Ms\.)(?<=[.!?])\s+(?=[A-Z])/);
+    parts = [t];
   }
-  return parts.map(p=>p.trim()).filter(p=>p.length>3);
+
+  // Final safety pass: split on unambiguous sentence boundaries (terminal
+  // punctuation followed by whitespace/newline and a capital letter), so a
+  // bulleted line followed by an un-bulleted trailing sentence — or any
+  // line that quietly contains two distinct points — still gets separated.
+  // Guarded against common abbreviations so "e.g." etc. doesn't trigger a split.
+  const sentenceBoundary = /(?<!e\.g\.)(?<!i\.e\.)(?<!etc\.)(?<!Dr\.)(?<!Mr\.)(?<!Mrs\.)(?<!Ms\.)(?<=[.!?])\s+(?=[A-Z])/;
+  let refined = [];
+  parts.forEach(p=>{ refined.push(...p.split(sentenceBoundary)); });
+
+  return refined.map(p=>p.trim()).filter(p=>p.length>3);
 }
 
 function classifyBullet(bullet){
@@ -369,6 +391,42 @@ function classifyBullet(bullet){
 function parseFeedback(rawText){
   const bullets = splitBullets(rawText);
   return bullets.map(classifyBullet);
+}
+
+/* ---------------------------------------------------------
+   TEXT CLEANUP + KEY-PHRASE EXTRACTION
+   (No AI/NLP here — just lightweight, transparent string rules so the
+   breakdown and reflection show the gist, not the full quote.)
+--------------------------------------------------------- */
+
+function cleanText(str){
+  return str
+    .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, " ")   // stray control chars
+    .replace(/[“”]/g, '"').replace(/[‘’]/g, "'")   // smart quotes -> plain
+    .replace(/\s*[–—]\s*/g, " — ")   // normalize dashes
+    .replace(/\.{2,}/g, ".").replace(/\?{2,}/g, "?").replace(/!{2,}/g, "!")   // repeated punctuation
+    .replace(/\s+/g, " ")
+    .replace(/^[\s.,;:\-–—]+/, "")
+    .trim();
+}
+
+// Filler openers that add no content when trimming to a key phrase.
+const FILLER_PREFIXES = [
+  "please ensure that ", "please ensure ", "for example, ", "however, ", "however ",
+  "also, ", "additionally, ", "note that ", "consider that ", "consider "
+];
+
+function keyPhrase(str, maxLen){
+  let s = cleanText(str);
+  const lower = s.toLowerCase();
+  for(const prefix of FILLER_PREFIXES){
+    if(lower.startsWith(prefix)){
+      s = s.slice(prefix.length);
+      s = s.charAt(0).toUpperCase() + s.slice(1);
+      break;
+    }
+  }
+  return shorten(s, maxLen);
 }
 
 /* ---------------------------------------------------------
@@ -414,7 +472,7 @@ function renderCategorized(parsed){
       const badgeText = item.sentiment==="growth" ? "Growth Area" : item.sentiment==="strength" ? "Strength" : "Context";
       html += `<div class="bullet-item ${badgeClass}">
         <span class="badge ${badgeClass}">${badgeText}</span>
-        <span class="quote">${escapeHtml(item.text)}</span>
+        <span class="quote">${escapeHtml(keyPhrase(item.text, 95))}</span>
       </div>`;
     });
     html += `</div>`;
@@ -447,7 +505,7 @@ function renderPriority(parsed){
     }
     html += `<div class="priority-box">
       <div class="rank">Priority ${idx+1} · ${meta.label}</div>
-      <div class="quote">${items.map(i=>escapeHtml(i.text)).join(' / ')}</div>
+      <div class="quote">${items.map(i=>escapeHtml(keyPhrase(i.text, 100))).join(' / ')}</div>
       <div class="why">Why it matters: ${meta.rationale}</div>
       <div class="action">👉 Action plan: ${action}</div>
     </div>`;
@@ -476,14 +534,14 @@ function renderReflection(parsed, rawText){
   const sortedGrowthCats = Object.keys(growthByCat).sort((a,b)=>CATEGORIES[a].priority-CATEGORIES[b].priority);
 
   let wentWell = strengthItems.length
-    ? strengthItems.map(t=>"- "+shorten(t,100)).join("\n")
+    ? strengthItems.map(t=>"- "+keyPhrase(t,70)).join("\n")
     : "- (Not explicitly praised this time — note what you think went well.)";
 
   let growthLines = sortedGrowthCats.length
     ? sortedGrowthCats.map((key,idx)=>{
         const items = growthByCat[key];
-        const quote = shorten(items.map(i=>i.text).join(" "), 110);
-        return `${idx+1}. [${CATEGORIES[key].label}] ${quote}\n   → ${shorten(CATEGORIES[key].rationale,130)}`;
+        const quote = keyPhrase(items.map(i=>i.text).join(" "), 70);
+        return `${idx+1}. [${CATEGORIES[key].label}] ${quote} — ${CATEGORIES[key].shortRationale}`;
       }).join("\n")
     : "1. (No clear growth areas extracted from this feedback.)";
 
@@ -534,7 +592,7 @@ function escapeHtml(s){
 /* ---------------------------------------------------------
    HISTORY / LOCALSTORAGE
 --------------------------------------------------------- */
-const HISTORY_KEY = "cfr_history_en_v1";
+const HISTORY_KEY = "cfr_history_en_v2";
 
 function getHistory(){
   try{
@@ -686,14 +744,16 @@ function showToast(msg){
 }
 
 function loadSample(){
+  // Deliberately generic and de-identified: no named conditions, diagnoses,
+  // locations, or anything that could identify a real patient or clinic.
+  // Included on purpose: one strength, two growth areas, and one critical
+  // safety/compliance error, so all four signal types are demonstrated.
   document.getElementById('rawInput').value =
-`• Limited examination due to patient complex medical history and inability for patient to tolerate a dental appointment.
-• CE assisted today with examination, discussion with the parent and advice/recommendations for the parent.
-• Please ensure that you ask follow-up questions with your medical history. For example, today you had a patient with epilepsy, so you need to ask follow-up questions around the types and frequency of seizures, if the parent has any prior knowledge or understanding of when the seizures will occur and what would trigger these events.
-• Oral hygiene instructions and dietary advice provided to patient and parent with assistance from CE.
-• Limited examination or treatment planning provided, however, good learning experience for patient management and ensuring that you write detailed notes.
-• Consider your appointment notes as well – ensure your notes reflect your appointment today. For example, what did you discuss with the parent, what advice, information or recommendations were provided and why, what will you need to complete for the next appointment. Your treatment notes are a medio-legal document and therefore should be an accurate reflection of the examination findings and any further discussions that have occurred. Considered including information about the discussions you have had with the parent and the recommendations that were made.
-• Breach of professionalism given today for incorrect/appropriate footwear in clinic. Please ensure you are wearing leather or leather-like shoes in clinic placement at Nepean as per our LHD policy.`;
+`• CE observed today's appointment and provided guidance throughout, including a discussion with the patient about the plan for their visit.
+• Well done building confident rapport with an anxious patient today and clearly explaining each step before proceeding — this helped keep them calm throughout.
+• Please ensure you ask more thorough follow-up questions whenever a patient discloses a relevant medical history — confirm severity, any known triggers, and precautions the team should be aware of, even if you keep the specific details brief in front of others.
+• Consider expanding your appointment notes — they should clearly capture what was discussed, the advice given and why, and the plan for the next visit.
+• Critical error: a mandatory sterilization/safety check was not completed before today's procedure, which is a serious breach of infection control protocol and must not happen again — always confirm the checklist before proceeding.`;
 }
 
 // init
