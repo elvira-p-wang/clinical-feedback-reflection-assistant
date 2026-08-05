@@ -223,6 +223,85 @@
     margin-bottom:20px;
   }
   hr.div{border:none;border-top:1px solid var(--line);margin:16px 0;}
+
+  /* Score Tracker */
+  .score-summary-box{
+    border:1px solid var(--line);
+    background:var(--accent-soft);
+    border-radius:2px;
+    padding:18px 20px;
+    margin-bottom:18px;
+  }
+  .score-summary-top{display:flex;align-items:baseline;gap:16px;margin-bottom:14px;flex-wrap:wrap;}
+  .score-percentage{font-family:Georgia,"Iowan Old Style","Palatino Linotype","Book Antiqua",serif;font-size:32px;color:var(--ink);}
+  .score-status{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;padding:3px 10px;border-radius:2px;}
+  .score-status.pass{background:var(--strength-bg);color:var(--strength);}
+  .score-status.fail{background:var(--danger-bg);color:var(--danger);}
+  .score-meta{font-size:12.5px;color:var(--ink-soft);}
+  .score-domain-row{display:flex;align-items:center;gap:10px;margin-bottom:8px;font-size:13px;}
+  .score-domain-label{width:220px;flex-shrink:0;color:var(--ink);}
+  .score-domain-bar-bg{flex:1;background:var(--card);border:1px solid var(--line);border-radius:1px;height:6px;overflow:hidden;}
+  .score-domain-bar-fill{background:var(--accent);height:100%;}
+  .score-domain-value{width:80px;text-align:right;color:var(--ink-soft);font-size:12px;flex-shrink:0;}
+  .score-entry-form{border:1px solid var(--line);border-radius:2px;padding:18px 20px;margin-top:14px;}
+  .score-entry-domain{margin-bottom:16px;}
+  .score-entry-domain-label{font-size:13px;color:var(--ink);margin-bottom:8px;font-weight:500;}
+  .rating-picker{display:flex;gap:8px;}
+  .rating-btn{
+    flex:1;padding:10px 8px;border:1px solid var(--line);background:var(--card);
+    border-radius:2px;cursor:pointer;text-align:center;font-family:inherit;
+    transition:background-color .2s ease,border-color .2s ease;
+  }
+  .rating-btn .code{display:block;font-size:15px;font-weight:600;color:var(--ink);}
+  .rating-btn .note{display:block;font-size:10.5px;color:var(--ink-soft);margin-top:2px;}
+  .rating-btn.selected{background:var(--accent-soft);border-color:var(--accent);}
+  .rating-btn.selected .code{color:var(--accent);}
+  .score-history-row{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line);padding:8px 2px;font-size:12.5px;color:var(--ink-soft);}
+  .score-history-row .ratings{font-family:-apple-system,BlinkMacSystemFont,"Helvetica Neue",Helvetica,Arial,sans-serif;color:var(--ink);letter-spacing:.05em;}
+
+  /* Competency Tracker */
+  .competency-summary-box{
+    border:1px solid var(--line);
+    background:var(--accent-soft);
+    border-radius:2px;
+    padding:16px 20px;
+    margin-bottom:18px;
+    display:flex;
+    align-items:baseline;
+    gap:16px;
+  }
+  .competency-group{margin-bottom:20px;}
+  .competency-group-label{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-soft);margin-bottom:8px;}
+  .competency-row{
+    display:flex;align-items:center;gap:12px;
+    border-radius:2px;padding:9px 12px;margin-bottom:6px;
+    font-size:13.5px;
+    transition:background-color .2s ease;
+    cursor:pointer;
+  }
+  .competency-row.done{background:transparent !important;}
+  .competency-row .code{font-size:11.5px;color:var(--ink-soft);width:34px;flex-shrink:0;}
+  .competency-row .name{flex:1;}
+  .competency-row.done .name{color:var(--ink-soft);text-decoration:line-through;text-decoration-color:var(--ink-faint);}
+  .competency-row input[type="checkbox"]{flex-shrink:0;width:15px;height:15px;accent-color:var(--accent);cursor:pointer;}
+
+  /* Outlook import summary */
+  .import-summary-box{
+    border:1px solid var(--line);
+    background:var(--accent-soft);
+    border-radius:2px;
+    padding:14px 16px;
+    margin-top:14px;
+    font-size:13px;
+    color:var(--ink-soft);
+    line-height:1.6;
+  }
+  .import-summary-box .title{
+    font-size:10.5px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;
+    color:var(--accent);margin-bottom:8px;
+  }
+  .import-summary-box .row{margin-top:4px;}
+  .import-summary-box .row.flag-critical{color:var(--danger);font-weight:600;}
 </style>
 </head>
 <body>
@@ -245,7 +324,9 @@
     </div>
     <div id="micStatus" class="hint" style="display:none;"></div>
     <div class="hint">The format is detected automatically — bullets, numbers, or plain paragraphs.</div>
+    <div class="hint">You can also paste a CE feedback email straight from Outlook — grades, comments, and items are sorted out automatically.</div>
     <div class="hint">Voice uses your browser's built-in speech recognition (Chrome, Edge). Audio is sent to your browser's speech service for transcription, not stored by this tool — but it is not local like everything else here. Review the transcript before generating.</div>
+    <div id="outlookImportSummary"></div>
   </div>
 
   <div class="card" id="categorizedCard" style="display:none;">
@@ -284,6 +365,24 @@
       <button class="secondary" onclick="exportHistory()">Export</button>
       <button class="danger" onclick="clearHistory()">Clear All</button>
     </div>
+  </div>
+
+  <div class="card">
+    <h2><span class="num">07</span>Score Tracker</h2>
+    <div class="section-note" id="scoreProfileNote"></div>
+    <div id="scoreSummary"></div>
+    <div id="scoreEntryForm"></div>
+    <div class="btnrow">
+      <button class="secondary" onclick="toggleScoreEntry()" id="scoreEntryToggle">Add Session Scores</button>
+    </div>
+    <div id="scoreHistory" style="margin-top:18px;"></div>
+  </div>
+
+  <div class="card">
+    <h2><span class="num">08</span>Competency Tracker</h2>
+    <div class="section-note">Checked items clear their category colour — matches your own tracker's logic.</div>
+    <div id="competencySummary"></div>
+    <div id="competencyOut"></div>
   </div>
 
 </div>
@@ -409,6 +508,94 @@ const CONDITION_QUESTION_BANK = {
 };
 
 /* ---------------------------------------------------------
+   PROFILE — rating scale, weighted rubric domains, and the
+   competency checklist. Deliberately a single swappable object:
+   every function below reads from ACTIVE_PROFILE rather than
+   hardcoded constants, so a different placement discipline's
+   rubric/competency book can replace this later without touching
+   any rendering or calculation logic. Today there is one built-in
+   profile (this student's own BOH2/BOH3 rubric + competency book,
+   transcribed from their spreadsheets); a "create your own
+   profile" builder is a planned follow-up, not built yet.
+--------------------------------------------------------- */
+const DEFAULT_PROFILE = {
+  name: "BOH2 / BOH3 — University of Sydney",
+  ratingScale: [
+    { code: "P", label: "Proficient",    points: 3, note: "Independent" },
+    { code: "S", label: "Satisfactory",  points: 2, note: "Minimal assistance" },
+    { code: "B", label: "Beginner",      points: 1, note: "Needs assistance" },
+    { code: "U", label: "Unsatisfactory",points: 0, note: "Unable to" }
+  ],
+  maxPoints: 3,
+  passThreshold: 50, // percent — confirm against your own unit outline; editable, not authoritative
+  domains: [
+    { id: "communication",       label: "Communication",                     weight: 10 },
+    { id: "critical_thinking",   label: "Critical Thinking & Knowledge",      weight: 30 },
+    { id: "patient_centred_care",label: "Patient-Centred Care",               weight: 20 },
+    { id: "procedural_skills",   label: "Procedural Skills",                  weight: 40 }
+  ],
+  competencies: [
+    { code:"1.1", category:"Infection Control", name:"Setting up clinical area & patient changeover" },
+    { code:"2.1", category:"Ergonomics", name:"Correct operator seating posture" },
+    { code:"3.1", category:"Communication", name:"Effective patient communication" },
+    { code:"3.2", category:"Communication", name:"Communication with team members" },
+    { code:"4.1", category:"Prevention", name:"Prophylaxis" },
+    { code:"4.2", category:"Prevention", name:"Placement of rubber dam" },
+    { code:"4.3", category:"Prevention", name:"Placement of fissure sealant – resin" },
+    { code:"4.4", category:"Prevention", name:"Placement of fissure protection – GIC" },
+    { code:"4.5", category:"Prevention", name:"Application of fluoride varnish" },
+    { code:"5.1", category:"Examination", name:"Clinical periodontal analysis & recording" },
+    { code:"5.2", category:"Examination", name:"Formulation of periodontal treatment plan – Adult" },
+    { code:"5.3", category:"Examination", name:"Comprehensive oral exam + treatment plan – Child" },
+    { code:"5.4", category:"Examination", name:"Comprehensive oral examination – Adult" },
+    { code:"5.5", category:"Examination", name:"Formulation of treatment plan – Adult" },
+    { code:"6.1", category:"Local Anaesthesia", name:"Buccal infiltration" },
+    { code:"6.2", category:"Local Anaesthesia", name:"IAN + Lingual nerve block" },
+    { code:"6.3", category:"Local Anaesthesia", name:"Palatal infiltration" },
+    { code:"6.4", category:"Local Anaesthesia", name:"Long buccal block" },
+    { code:"7.1", category:"Restoration", name:"Class I restoration – composite" },
+    { code:"7.2", category:"Restoration", name:"Class II restoration – composite" },
+    { code:"7.3", category:"Restoration", name:"Class III / IV restoration – composite" },
+    { code:"7.4", category:"Restoration", name:"Class V restoration / root caries" },
+    { code:"7.5", category:"Restoration", name:"Class II restoration primary tooth – GIC" },
+    { code:"7.6", category:"Restoration", name:"Pulpotomy primary tooth" },
+    { code:"7.7", category:"Restoration", name:"Stainless steel crown" },
+    { code:"8.1", category:"Periodontal", name:"Supra-gingival debridement (one sextant)" },
+    { code:"8.2", category:"Periodontal", name:"Sub-gingival debridement (one quadrant)" },
+    { code:"8.3", category:"Periodontal", name:"Instrument sharpening" },
+    { code:"9.1", category:"Extraction", name:"Extraction of primary tooth" },
+    { code:"10.1", category:"Radiograph", name:"Bitewing radiographs" },
+    { code:"10.2", category:"Radiograph", name:"Periapical radiograph" },
+    { code:"10.3", category:"Radiograph", name:"OPG" }
+  ]
+};
+
+// Placeholder for future profile-switching — every consumer below
+// reads ACTIVE_PROFILE, never DEFAULT_PROFILE directly.
+let ACTIVE_PROFILE = DEFAULT_PROFILE;
+
+// Stable, deterministic muted colour per competency category, cycling
+// through a small apothecary-consistent palette so any profile's
+// category list gets sensible colouring without hand-mapping each one.
+const COMPETENCY_PALETTE = [
+  { bg:"#f4ecd9", fg:"#8a6a30" }, // ochre
+  { bg:"#e7efe1", fg:"#4c6b45" }, // sage
+  { bg:"#f0ede5", fg:"#8a8578" }, // stone
+  { bg:"#f3e6e1", fg:"#93493a" }, // terracotta
+  { bg:"#e6e9ef", fg:"#4a5a73" }, // dusty blue
+  { bg:"#efe6da", fg:"#6b4a34" }, // brown
+  { bg:"#f0e6ec", fg:"#7a4a63" }, // dusty rose
+  { bg:"#eaefe6", fg:"#5c6b4a" }, // olive
+  { bg:"#e9e4f0", fg:"#5f4f7a" }, // muted violet
+  { bg:"#f1ebe0", fg:"#7a6a4a" }  // sand
+];
+function categoryColor(category){
+  const cats = [...new Set(ACTIVE_PROFILE.competencies.map(c=>c.category))];
+  const idx = cats.indexOf(category);
+  return COMPETENCY_PALETTE[idx % COMPETENCY_PALETTE.length];
+}
+
+/* ---------------------------------------------------------
    PARSING LOGIC
 --------------------------------------------------------- */
 function splitBullets(text){
@@ -446,6 +633,15 @@ function splitBullets(text){
   let refined = [];
   parts.forEach(p=>{ refined.push(...p.split(sentenceBoundary)); });
 
+  // Inline numbering: some educators number points within one paragraph
+  // ("...could have been better 2-Taking consent was... 3-Please know...")
+  // instead of using line breaks or a bullet character. There's often no
+  // sentence-ending punctuation between such points, so the sentence-
+  // boundary pass above can't separate them and they'd otherwise stay
+  // fused into one bullet. Split right before each such marker.
+  let numbered = [];
+  refined.forEach(p=>{ numbered.push(...splitOnInlineNumbering(p)); });
+
   // Punctuation-free fallback: if a chunk has no sentence-ending
   // punctuation at all (e.g. a continuous voice dictation with no pauses,
   // or fast free-typed prose with no periods), the passes above can't find
@@ -453,18 +649,29 @@ function splitBullets(text){
   // point of feedback instead, so classification doesn't depend on correct
   // punctuation to work.
   let final = [];
-  refined.forEach(p=>{ final.push(...splitOnTransitionMarkers(p)); });
+  numbered.forEach(p=>{ final.push(...splitOnTransitionMarkers(p)); });
 
   return final.map(p=>p.trim()).filter(p=>p.length>3);
+}
+
+function splitOnInlineNumbering(text){
+  const re = /\s\d{1,2}[-.)]\s*(?=[A-Z])/;
+  if(!re.test(text)) return [text];
+  const parts = text.split(/\s\d{1,2}[-.)]\s*(?=[A-Z])/g).map(p=>p.trim()).filter(Boolean);
+  return parts.length > 1 ? parts : [text];
 }
 
 // Ordered longest-phrase-first, and deliberately non-overlapping (e.g. no
 // standalone "ensure you" alongside "please ensure" — two markers that can
 // both match right next to each other strand a 1-2 word fragment between
 // them, like a lone "Please").
+// "next time" was removed from this list — a real feedback example showed
+// it triggering a false split mid-sentence ("...please take written consent
+// next time for every procedure...", which is one point, not two). It's too
+// common as a natural phrase inside a sentence to reliably mark a new one.
 const TRANSITION_MARKERS = [
   "well done","great job","nice work","good job","nicely done",
-  "please ensure","make sure","remember to","next time",
+  "please ensure","make sure","remember to",
   "consider","also,","also ","additionally","one more thing","another thing",
   "critical error","overall,","overall ","in addition","try to","aim to",
   "you should","you need to","i also noticed","i noticed","one area",
@@ -619,6 +826,13 @@ function handleParse(){
     showToast("Please paste feedback text first");
     return;
   }
+  document.getElementById('outlookImportSummary').innerHTML = "";
+  outlookImportActive = false;
+  pendingCompetencyCompletions = [];
+  if(looksLikeOutlookFeedback(raw)){
+    handleOutlookParse(raw);
+    return;
+  }
   currentRaw = raw;
   currentParsed = parseFeedback(raw);
   renderCategorized(currentParsed);
@@ -627,6 +841,352 @@ function handleParse(){
   document.getElementById('categorizedCard').style.display='block';
   document.getElementById('priorityCard').style.display='block';
   document.getElementById('reflectionCard').style.display='block';
+}
+
+/* ---------------------------------------------------------
+   OUTLOOK CE FEEDBACK EMAIL IMPORT (Phase 1 — paste, no network)
+   The university's Power Automate flow sends a fixed label:value
+   template (Student / Date-Time / Venue / Session / Grades /
+   Comments overall / Clinical items / Clinical Competency). This
+   recognizes and extracts that template when pasted into the same
+   Feedback box used for ordinary free-text feedback — nothing new
+   for the student to learn — then routes each part to where it
+   already belongs: grades to the Score Tracker, "Comments overall"
+   through the normal feedback engine, everything else into a
+   plain summary note. No email account access, no network calls.
+--------------------------------------------------------- */
+function looksLikeOutlookFeedback(text){
+  return /Student\s*:/i.test(text) && /Grades\s*:/i.test(text) && /Comments overall/i.test(text);
+}
+
+const OUTLOOK_DOMAIN_ALIASES = {
+  communication: ["communication"],
+  critical_thinking: ["critical thinking"],
+  patient_centred_care: ["patient[\\s-]?centred care", "patient[\\s-]?centered care"],
+  procedural_skills: ["procedural skills"]
+};
+
+function grabField(text, label){
+  const re = new RegExp(label.replace(/[.*+?^${}()|[\]\\]/g,"\\$&") + "\\s*:\\s*(.*)", "i");
+  const m = text.match(re);
+  return m ? m[1].trim() : "";
+}
+
+// Loose word-overlap matching for competency descriptions. Deliberately
+// simple (no real NLP) — it only confirms matches on shared meaningful
+// words, never invents one. The student found a real case where a CE's
+// typed code ("7.6") didn't match its own description ("Class II glass
+// ionomer restoration") — the description clearly meant a different
+// checklist item (7.5). Per her instruction, description text is treated
+// as more trustworthy than the typed code, since CEs mistype codes but
+// rarely misdescribe the procedure they watched.
+const COMPETENCY_MATCH_STOPWORDS = new Set(["class","primary","tooth","teeth","in","a","an","the","of","and","or","for","with","on","i","ii","iii","iv","v","surface","anterior","posterior","adult","child"]);
+const COMPETENCY_SYNONYMS = { gic:"glassionomer", glass:"glassionomer", ionomer:"glassionomer" };
+function competencyWords(s){
+  return s.toLowerCase().replace(/[^a-z0-9\s]/g," ").split(/\s+/)
+    .filter(w=>w.length>=3 && !COMPETENCY_MATCH_STOPWORDS.has(w))
+    .map(w=>COMPETENCY_SYNONYMS[w] || w);
+}
+function competencyTextSupportsMatch(content, name){
+  const nameWords = competencyWords(name);
+  const contentWords = new Set(competencyWords(content));
+  return nameWords.some(w=>contentWords.has(w));
+}
+// Ranks every competency by shared meaningful words against the
+// description text. Only used as a fallback when a typed code is absent
+// or doesn't fit its own description — returns the top match ONLY if it's
+// a clear, unique winner (not tied with another item), since a tie means
+// the wording alone can't tell two checklist items apart and guessing
+// would be worse than asking the student to check manually.
+function bestCompetencyTextMatch(content){
+  const contentWords = new Set(competencyWords(content));
+  if(!contentWords.size) return null;
+  let best = null, bestScore = 0, tie = false;
+  ACTIVE_PROFILE.competencies.forEach(c=>{
+    const score = competencyWords(c.name).filter(w=>contentWords.has(w)).length;
+    if(score === 0) return;
+    if(score > bestScore){ bestScore = score; best = c; tie = false; }
+    else if(score === bestScore && best && c.code !== best.code){ tie = true; }
+  });
+  return (best && !tie) ? best : null;
+}
+
+// Known section labels, used as boundary anchors instead of blank lines /
+// newlines. A real student paste showed that copying this email straight
+// out of Outlook into a plain textarea can silently drop the blank line
+// (sometimes even the newline) between two sections — e.g. "2. -NA" ran
+// directly into "If competancy outcome..." with zero characters between
+// them. Any regex boundary built on "\n\s*\n" breaks the moment that
+// happens and swallows everything up to the next place a blank line
+// happens to survive (or the end of the string). Anchoring on the labels
+// themselves, wherever they land, is immune to that.
+// "compet[ae]nc" instead of a fixed spelling — the real template misspells
+// it "competancy" almost everywhere but not with full consistency (one
+// real email had both "Competancy" and "competencies" in the same line),
+// so matching only one spelling would silently miss the other.
+const OUTLOOK_NEXT_LABELS = [
+  /continue with clinical items work/i,
+  /clinical items completed/i,
+  /continue with clinical compet[ae]nc/i,
+  /clinical compet[ae]nc\w*\//i,
+  /if compet[ae]nc\w* outcome/i,
+  /comments for clinical compet[ae]nc/i,
+  /breached prof/i
+];
+function nextLabelPos(t, from){
+  let best = -1;
+  const tail = t.slice(from);
+  OUTLOOK_NEXT_LABELS.forEach(re=>{
+    const m = tail.match(re);
+    if(m){
+      const idx = from + m.index;
+      if(best === -1 || idx < best) best = idx;
+    }
+  });
+  return best;
+}
+// Extracts the text after a label's own match up to wherever the next
+// known label starts (or end of string) — the general-purpose replacement
+// for the old "\n\s*\n"-terminated regexes.
+function extractSection(t, labelRegex){
+  const m = t.match(labelRegex);
+  if(!m) return "";
+  const start = m.index + m[0].length;
+  const end = nextLabelPos(t, start);
+  return (end === -1 ? t.slice(start) : t.slice(start, end)).trim();
+}
+// Splits a "1. ... 2. ... 3. ..." competency block into its items by
+// walking the expected item numbers in sequence (1, then 2, then 3...)
+// rather than splitting on line breaks — the same real paste that dropped
+// blank lines between sections also isn't guaranteed to keep a newline
+// between item 2 and item 3. Searching for the exact next expected integer
+// (instead of "any digit followed by a period") avoids false splits on a
+// competency code like "7.6" appearing inside an item's own description.
+function splitCompetencyItems(block){
+  const parts = [];
+  let n = 1, from = 0;
+  while(true){
+    // Item markers can end up glued directly onto the previous item's
+    // outcome word with zero separator at all ("...Competent2. -NA", not
+    // even a space) in the same real paste that dropped blank lines
+    // elsewhere. A negative lookbehind for digit-or-dot (rather than
+    // requiring whitespace/start-of-string) still catches that case while
+    // refusing to match in the middle of a decimal competency code like
+    // the ".6" in "7.6".
+    const startRe = new RegExp("(?<![\\d.])" + n + "\\.\\s*-?\\s*");
+    const sm = block.slice(from).match(startRe);
+    if(!sm) break;
+    const contentStart = from + sm.index + sm[0].length;
+    const endRe = new RegExp("(?<![\\d.])" + (n+1) + "\\.\\s*-?\\s*");
+    const em = block.slice(contentStart).match(endRe);
+    const contentEnd = em ? contentStart + em.index : block.length;
+    parts.push(block.slice(contentStart, contentEnd).trim());
+    from = contentEnd;
+    n++;
+  }
+  return parts;
+}
+
+function parseOutlookFeedback(text){
+  const t = text.replace(/\r\n/g, "\n");
+
+  const student = grabField(t, "Student");
+  const dateTime = grabField(t, "Date/Time");
+  const venue = grabField(t, "Venue");
+  const session = grabField(t, "Session");
+
+  const ratings = {};
+  ACTIVE_PROFILE.domains.forEach(d=>{
+    const aliases = OUTLOOK_DOMAIN_ALIASES[d.id] || [d.label.toLowerCase()];
+    for(const alias of aliases){
+      const re = new RegExp(alias + "[^:\\n]*:\\s*([A-Za-z]+)", "i");
+      const m = t.match(re);
+      if(m){
+        const code = m[1].trim().toUpperCase();
+        if(ACTIVE_PROFILE.ratingScale.some(r=>r.code===code)){ ratings[d.id] = code; break; }
+      }
+    }
+  });
+
+  const infectionMatch = t.match(/Infection contro\w*\s*\(Critical Error\?\)\s*:\s*(\w+)/i);
+  const professionalismMatch = t.match(/Professionalism\s*\(Critical Error\?\)\s*:\s*(\w+)/i);
+  const breachedMatch = t.match(/Breached Prof\w*\s*:\s*(\w+)/i);
+  const infectionFlag = infectionMatch ? /yes/i.test(infectionMatch[1]) : false;
+  const professionalismFlag = professionalismMatch ? /yes/i.test(professionalismMatch[1]) : false;
+  const breachedFlag = breachedMatch ? /yes/i.test(breachedMatch[1]) : false;
+
+  const commentsOverall = extractSection(t, /Comments overall\s*:/i);
+
+  // Item numbers logged each visit — not part of the competency book,
+  // kept as a plain note per the student's own instruction, not matched
+  // against any tracked list.
+  const itemsMatch = t.match(/Clinical items completed[^:]*:\s*(\[[^\]]*\])/i);
+  let clinicalItems = [];
+  if(itemsMatch){
+    try{ clinicalItems = JSON.parse(itemsMatch[1].replace(/'/g,'"')); }
+    catch(e){ clinicalItems = itemsMatch[1].replace(/[\[\]"]/g,"").split(",").map(s=>s.trim()).filter(Boolean); }
+  }
+
+  const compBlock = extractSection(t, /Clinical Competancy\/[^:]*outcome\s*:/i);
+  let competencyAttempts = [];
+  if(compBlock){
+    splitCompetencyItems(compBlock).forEach(content=>{
+      if(!content || /^na$/i.test(content)) return;
+
+      // "Achieved" only counts on the literal word "competent" — and only
+      // when it isn't negated ("not competent" / "not yet competent") and
+      // isn't a different status word like "Learner" that happens to sit
+      // in the same field. Confirmed with the student: this is the exact
+      // rule her CE's use, nothing looser.
+      const achieved = /\bcompetent\b/i.test(content) && !/\bnot\s+(yet\s+)?competent\b/i.test(content);
+
+      // A competency code (e.g. "3.2") if the CE included one — needed to
+      // match against the specific checklist item in section 08. If no
+      // code is present, fall back to matching by name text.
+      //
+      // Codes are trusted only if the surrounding description text actually
+      // supports them — a real CE email was found where the numbered code
+      // (e.g. "7.6") didn't match what the checklist calls that code (the
+      // description was clearly a different procedure). Ticking the wrong
+      // checklist item is worse than not ticking anything, so when the code
+      // and the description disagree, the description wins (per the
+      // student's explicit instruction: text over code, since CEs mistype
+      // codes more often than they misdescribe a procedure). The code is
+      // still used to break a tie when the description alone can't
+      // distinguish between near-identical checklist items.
+      const codeMatch = content.match(/\b(\d{1,2}\.\d{1,2})\b/);
+      const codeCandidate = codeMatch ? (ACTIVE_PROFILE.competencies.find(c=>c.code===codeMatch[1]) || null) : null;
+      const textMatch = bestCompetencyTextMatch(content);
+
+      let matched = null;
+      let codeMismatch = null;
+      let codeOverridden = null;
+      if(codeCandidate && competencyTextSupportsMatch(content, codeCandidate.name)){
+        // Code and description agree — nothing to resolve.
+        matched = codeCandidate;
+      } else if(textMatch){
+        // Description gives a clear, unambiguous match — trust it even if
+        // the code disagrees (or is missing).
+        matched = textMatch;
+        if(codeCandidate && codeCandidate.code !== textMatch.code) codeOverridden = codeCandidate;
+      } else if(codeCandidate){
+        // Code present but unsupported, and the description alone is
+        // ambiguous or matches nothing — don't guess, flag it.
+        codeMismatch = codeCandidate;
+      }
+
+      competencyAttempts.push({
+        raw: content,
+        achieved,
+        matchedCode: matched ? matched.code : null,
+        matchedName: matched ? matched.name : null,
+        codeMismatch: codeMismatch ? { code: codeMismatch.code, name: codeMismatch.name } : null,
+        codeOverridden: codeOverridden ? { code: codeOverridden.code, name: codeOverridden.name } : null
+      });
+    });
+  }
+
+  return { student, dateTime, venue, session, ratings, infectionFlag, professionalismFlag, breachedFlag, commentsOverall, clinicalItems, competencyAttempts };
+}
+
+// Competency codes staged from an Outlook import, to be marked complete
+// when the student clicks the main Save button — mirrors how score
+// ratings are pre-filled but not persisted until Save is confirmed.
+let pendingCompetencyCompletions = [];
+
+function handleOutlookParse(raw){
+  const parsed = parseOutlookFeedback(raw);
+
+  currentRaw = parsed.commentsOverall || raw;
+  currentParsed = parseFeedback(currentRaw);
+  renderCategorized(currentParsed);
+  renderPriority(currentParsed);
+  renderReflection(currentParsed, currentRaw);
+  document.getElementById('categorizedCard').style.display='block';
+  document.getElementById('priorityCard').style.display='block';
+  document.getElementById('reflectionCard').style.display='block';
+
+  if(Object.keys(parsed.ratings).length){
+    openScoreEntry();
+    Object.keys(parsed.ratings).forEach(domainId=>selectRating(domainId, parsed.ratings[domainId]));
+    // Score form is now pre-filled but unsaved — clicking the main Save
+    // button below will confirm it too, so this doesn't need a separate click.
+    outlookImportActive = true;
+  }
+
+  // Stage every achieved + matched code here, done or not — whether it's
+  // actually new gets decided live at Save time (see saveEntry()), so a
+  // manual untick between parsing and saving is respected instead of
+  // silently ignored because it looked "already done" back at parse time.
+  pendingCompetencyCompletions = parsed.competencyAttempts
+    .filter(a => a.achieved && a.matchedCode)
+    .map(a => a.matchedCode);
+
+  showOutlookImportSummary(parsed);
+  showToast("Outlook feedback recognized — review before saving");
+}
+
+function showOutlookImportSummary(parsed){
+  const el = document.getElementById('outlookImportSummary');
+  const flags = [];
+  if(parsed.infectionFlag) flags.push("Infection Control — Critical Error");
+  if(parsed.professionalismFlag) flags.push("Professionalism — Critical Error");
+  if(parsed.breachedFlag) flags.push("Breached Professionalism");
+
+  const done = getCompetencyDone();
+  const compRows = parsed.competencyAttempts.map(a=>{
+    if(a.achieved && a.matchedCode){
+      const overrideNote = a.codeOverridden
+        ? ` (email's code said "${escapeHtml(a.codeOverridden.code + " " + a.codeOverridden.name)}" — used the description instead, please double-check)`
+        : "";
+      return done[a.matchedCode]
+        ? `${escapeHtml(a.matchedCode + " " + a.matchedName)} — already marked complete${overrideNote}`
+        : `${escapeHtml(a.matchedCode + " " + a.matchedName)} — will be marked complete on Save${overrideNote}`;
+    }
+    if(a.achieved && a.codeMismatch){
+      return `${escapeHtml(a.raw)} — the code points to "${escapeHtml(a.codeMismatch.code + " " + a.codeMismatch.name)}" in your competency list, which doesn't match this description. Not auto-marked — check your competency numbering and tick manually`;
+    }
+    if(a.achieved && !a.matchedCode){
+      return `${escapeHtml(a.raw)} — sounds achieved, but couldn't match it to a checklist item; check it manually in Competency Tracker`;
+    }
+    return escapeHtml(a.raw);
+  });
+
+  el.innerHTML = `<div class="import-summary-box">
+    <div class="title">Recognized as an Outlook feedback email</div>
+    <div class="row">${escapeHtml([parsed.venue, parsed.session, parsed.dateTime].filter(Boolean).join(" · ") || "No session details found")}</div>
+    ${flags.length ? `<div class="row flag-critical">${escapeHtml(flags.join(" · "))}</div>` : ""}
+    ${parsed.clinicalItems.length ? `<div class="row">Clinical items this session: ${escapeHtml(parsed.clinicalItems.join(", "))}</div>` : ""}
+    ${compRows.length ? `<div class="row">Competency: ${compRows.join(" · ")}</div>` : ""}
+    <div class="row">Ratings pre-filled into Score Tracker below — review, then click Save to confirm everything at once.</div>
+  </div>`;
+}
+
+// Sets a competency to complete without toggling it back off if called
+// again — unlike toggleCompetency(), which flips state and is meant for
+// direct clicks on the checklist.
+function setCompetencyCompleted(code){
+  const done = getCompetencyDone();
+  if(!done[code]){
+    done[code] = new Date().toISOString().slice(0,10);
+    setCompetencyDone(done);
+  }
+}
+
+// Shared by both save paths — the main "Save" button (saveEntry) AND the
+// score form's own "Save Session" button (saveScoreEntry) can each be the
+// first thing the student clicks after an Outlook import, so whichever one
+// fires first should commit any staged competency completions rather than
+// only the main Save button handling it. Safe to call from both — it's a
+// no-op once the list is empty, so it never double-processes.
+function commitPendingCompetencyCompletions(){
+  if(!pendingCompetencyCompletions.length) return 0;
+  const doneNow = getCompetencyDone();
+  const newlyMarked = pendingCompetencyCompletions.filter(code=>!doneNow[code]);
+  pendingCompetencyCompletions.forEach(code=>setCompetencyCompleted(code));
+  pendingCompetencyCompletions = [];
+  renderCompetencyTracker();
+  return newlyMarked.length;
 }
 
 function catMeta(key){
@@ -811,7 +1371,32 @@ function saveEntry(){
   setHistory(history);
   renderHistory();
   renderTrends();
-  showToast("Saved to history");
+
+  let scoreSaved = false;
+  let competenciesMarked = 0;
+  if(outlookImportActive){
+    const domainsFilled = ACTIVE_PROFILE.domains.every(d=>pendingRatings[d.id]);
+    const form = document.getElementById('scoreEntryForm');
+    if(domainsFilled && form && form.dataset.open === "1"){
+      // saveScoreEntry() itself commits any staged competency completions
+      // and returns the count — using its return value here avoids
+      // double-processing (and losing the count) by also calling the
+      // commit helper separately right after.
+      competenciesMarked = saveScoreEntry();
+      scoreSaved = true;
+    } else {
+      // Score form wasn't open here — most likely "Save Session" was
+      // already clicked earlier and did this; call the helper directly
+      // as a safe no-op if so, or to catch it if it somehow wasn't.
+      competenciesMarked = commitPendingCompetencyCompletions();
+    }
+    outlookImportActive = false;
+  }
+
+  const extras = [];
+  if(scoreSaved) extras.push("session scores saved");
+  if(competenciesMarked) extras.push(`${competenciesMarked} competenc${competenciesMarked===1?'y':'ies'} marked complete`);
+  showToast(extras.length ? `Saved to history · ${extras.join(" · ")}` : "Saved to history");
 }
 
 function renderHistory(){
@@ -906,6 +1491,217 @@ function renderTrends(){
       <div class="trend-count">${count}</div>
     </div>`;
   }).join("") + `<div class="hint" style="margin-top:10px;">Tallied across ${history.length} saved feedback entries. Themes that keep recurring are worth a longer-term improvement plan.</div>`;
+}
+
+/* ---------------------------------------------------------
+   SCORE TRACKER
+   Replicates the exact weighted-average formula from the CCA
+   rubric: per domain, average the points earned across every
+   logged session, multiply by that domain's weight, sum across
+   domains, divide by max points, ×100 for a percentage. Same
+   maths as the student's own spreadsheet (verified against their
+   real example: 1.69 / 3 = 56.3%).
+--------------------------------------------------------- */
+const SCORE_KEY = "cfr_score_entries_v1";
+let pendingRatings = {};
+// Set true only while an Outlook-imported email's ratings sit pre-filled
+// and unsaved in the score form; consumed (and reset) by saveEntry() so
+// clicking the main "Save" button also confirms the score entry in one step.
+let outlookImportActive = false;
+
+function getScoreEntries(){
+  try{ return JSON.parse(localStorage.getItem(SCORE_KEY)) || []; }catch(e){ return []; }
+}
+function setScoreEntries(arr){ localStorage.setItem(SCORE_KEY, JSON.stringify(arr)); }
+
+function toggleScoreEntry(){
+  const form = document.getElementById('scoreEntryForm');
+  const isOpen = form.dataset.open === "1";
+  if(isOpen) closeScoreEntry(); else openScoreEntry();
+}
+
+function closeScoreEntry(){
+  const form = document.getElementById('scoreEntryForm');
+  form.innerHTML = "";
+  form.dataset.open = "0";
+  document.getElementById('scoreEntryToggle').textContent = "Add Session Scores";
+}
+
+// Split out from toggleScoreEntry so the Outlook-email importer can force
+// the form open (and pre-fill it) without accidentally closing one the
+// student already had open.
+function openScoreEntry(){
+  const form = document.getElementById('scoreEntryForm');
+  pendingRatings = {};
+  form.dataset.open = "1";
+  document.getElementById('scoreEntryToggle').textContent = "Cancel";
+  form.innerHTML = `<div class="score-entry-form">
+    ${ACTIVE_PROFILE.domains.map(d=>`
+      <div class="score-entry-domain">
+        <div class="score-entry-domain-label">${escapeHtml(d.label)} <span style="color:var(--ink-faint);">(${d.weight}%)</span></div>
+        <div class="rating-picker" id="ratingPicker-${d.id}">
+          ${ACTIVE_PROFILE.ratingScale.map(r=>`
+            <div class="rating-btn" onclick="selectRating('${d.id}','${r.code}')" id="ratingBtn-${d.id}-${r.code}">
+              <span class="code">${r.code}</span>
+              <span class="note">${escapeHtml(r.note)}</span>
+            </div>
+          `).join("")}
+        </div>
+      </div>
+    `).join("")}
+    <div class="btnrow">
+      <button onclick="saveScoreEntry()">Save Session</button>
+    </div>
+  </div>`;
+}
+
+function selectRating(domainId, code){
+  pendingRatings[domainId] = code;
+  ACTIVE_PROFILE.ratingScale.forEach(r=>{
+    const btn = document.getElementById(`ratingBtn-${domainId}-${r.code}`);
+    if(btn) btn.classList.toggle('selected', r.code === code);
+  });
+}
+
+function saveScoreEntry(){
+  const missing = ACTIVE_PROFILE.domains.filter(d=>!pendingRatings[d.id]);
+  if(missing.length){
+    showToast(`Select a rating for: ${missing.map(d=>d.label).join(", ")}`);
+    return 0;
+  }
+  const entries = getScoreEntries();
+  entries.push({
+    id: Date.now(),
+    date: new Date().toISOString().slice(0,10),
+    ratings: { ...pendingRatings }
+  });
+  setScoreEntries(entries);
+  toggleScoreEntry();
+  renderScoreTracker();
+
+  // If this score form was pre-filled from an Outlook import, competency
+  // completions staged from that same email are committed here too — in
+  // case the student clicks this "Save Session" button first, instead of
+  // the main Save button below. Returns the count so a caller (the main
+  // Save button) can fold it into one combined toast instead of either
+  // double-processing it or silently under-reporting it.
+  const competenciesMarked = outlookImportActive ? commitPendingCompetencyCompletions() : 0;
+  let msg = "Session scores saved";
+  if(competenciesMarked) msg += ` · ${competenciesMarked} competenc${competenciesMarked===1?'y':'ies'} marked complete`;
+  showToast(msg);
+  return competenciesMarked;
+}
+
+function deleteScoreEntry(id){
+  let entries = getScoreEntries();
+  entries = entries.filter(e=>e.id!==id);
+  setScoreEntries(entries);
+  renderScoreTracker();
+}
+
+function pointsFor(code){
+  const r = ACTIVE_PROFILE.ratingScale.find(r=>r.code===code);
+  return r ? r.points : 0;
+}
+
+function computeScoreSummary(entries){
+  const perDomain = ACTIVE_PROFILE.domains.map(d=>{
+    const ratings = entries.map(e=>e.ratings[d.id]).filter(Boolean);
+    const avg = ratings.length ? ratings.reduce((s,c)=>s+pointsFor(c),0) / ratings.length : 0;
+    return { domain: d, avg, sessions: ratings.length };
+  });
+  const weightedTotal = perDomain.reduce((sum,p)=> sum + (p.avg * p.domain.weight / 100), 0);
+  const percentage = ACTIVE_PROFILE.maxPoints ? (weightedTotal / ACTIVE_PROFILE.maxPoints) * 100 : 0;
+  return { perDomain, weightedTotal, percentage };
+}
+
+function renderScoreTracker(){
+  document.getElementById('scoreProfileNote').textContent =
+    `Using the ${ACTIVE_PROFILE.name} rubric. Pass threshold shown (${ACTIVE_PROFILE.passThreshold}%) is a default — confirm the real one in your unit outline.`;
+  const entries = getScoreEntries();
+  const summaryEl = document.getElementById('scoreSummary');
+  const historyEl = document.getElementById('scoreHistory');
+
+  if(entries.length === 0){
+    summaryEl.innerHTML = '<div class="empty-msg">No sessions logged yet. Add your first session\'s ratings below.</div>';
+    historyEl.innerHTML = "";
+    return;
+  }
+
+  const { perDomain, weightedTotal, percentage } = computeScoreSummary(entries);
+  const pass = percentage >= ACTIVE_PROFILE.passThreshold;
+
+  summaryEl.innerHTML = `<div class="score-summary-box">
+    <div class="score-summary-top">
+      <div class="score-percentage">${percentage.toFixed(1)}%</div>
+      <div class="score-status ${pass ? 'pass' : 'fail'}">${pass ? 'On track' : 'Below threshold'}</div>
+      <div class="score-meta">${weightedTotal.toFixed(2)} / ${ACTIVE_PROFILE.maxPoints} · ${entries.length} session${entries.length===1?'':'s'} logged</div>
+    </div>
+    ${perDomain.map(p=>{
+      const pct = ACTIVE_PROFILE.maxPoints ? Math.round((p.avg / ACTIVE_PROFILE.maxPoints) * 100) : 0;
+      return `<div class="score-domain-row">
+        <div class="score-domain-label">${escapeHtml(p.domain.label)} <span style="color:var(--ink-faint);">(${p.domain.weight}%)</span></div>
+        <div class="score-domain-bar-bg"><div class="score-domain-bar-fill" style="width:${pct}%"></div></div>
+        <div class="score-domain-value">${p.avg.toFixed(2)} / ${ACTIVE_PROFILE.maxPoints} · n=${p.sessions}</div>
+      </div>`;
+    }).join("")}
+  </div>`;
+
+  historyEl.innerHTML = entries.slice().reverse().map(e=>{
+    const ratingsStr = ACTIVE_PROFILE.domains.map(d=>e.ratings[d.id]||"–").join("  ");
+    return `<div class="score-history-row">
+      <div>${e.date} <span class="ratings">${ratingsStr}</span></div>
+      <button class="ghost" onclick="deleteScoreEntry(${e.id})">Remove</button>
+    </div>`;
+  }).join("");
+}
+
+/* ---------------------------------------------------------
+   COMPETENCY TRACKER
+--------------------------------------------------------- */
+const COMPETENCY_KEY = "cfr_competency_done_v1";
+
+function getCompetencyDone(){
+  try{ return JSON.parse(localStorage.getItem(COMPETENCY_KEY)) || {}; }catch(e){ return {}; }
+}
+function setCompetencyDone(obj){ localStorage.setItem(COMPETENCY_KEY, JSON.stringify(obj)); }
+
+function toggleCompetency(code){
+  const done = getCompetencyDone();
+  if(done[code]) delete done[code];
+  else done[code] = new Date().toISOString().slice(0,10);
+  setCompetencyDone(done);
+  renderCompetencyTracker();
+}
+
+function renderCompetencyTracker(){
+  const done = getCompetencyDone();
+  const all = ACTIVE_PROFILE.competencies;
+  const doneCount = all.filter(c=>done[c.code]).length;
+  const pct = all.length ? Math.round((doneCount/all.length)*100) : 0;
+
+  document.getElementById('competencySummary').innerHTML = `<div class="competency-summary-box">
+    <div class="score-percentage">${pct}%</div>
+    <div class="score-meta">${doneCount} of ${all.length} competencies signed off</div>
+  </div>`;
+
+  const categories = [...new Set(all.map(c=>c.category))];
+  document.getElementById('competencyOut').innerHTML = categories.map(cat=>{
+    const items = all.filter(c=>c.category===cat);
+    const color = categoryColor(cat);
+    return `<div class="competency-group">
+      <div class="competency-group-label">${escapeHtml(cat)}</div>
+      ${items.map(c=>{
+        const isDone = !!done[c.code];
+        const style = isDone ? "" : `background:${color.bg};`;
+        return `<div class="competency-row ${isDone?'done':''}" style="${style}" onclick="toggleCompetency('${c.code}')">
+          <input type="checkbox" ${isDone?'checked':''} onclick="event.stopPropagation();toggleCompetency('${c.code}')">
+          <span class="code">${c.code}</span>
+          <span class="name">${escapeHtml(c.name)}</span>
+        </div>`;
+      }).join("")}
+    </div>`;
+  }).join("");
 }
 
 /* ---------------------------------------------------------
@@ -1056,6 +1852,8 @@ function loadSample(){
 renderHistory();
 renderTrends();
 initVoiceSupport();
+renderScoreTracker();
+renderCompetencyTracker();
 </script>
 </body>
 </html>

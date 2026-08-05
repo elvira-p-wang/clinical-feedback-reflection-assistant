@@ -46,6 +46,10 @@ your real feelings to.
 - **Concise, keyword-driven reflective draft** — Went Well / Needs Improvement / Action Plan / Feelings / Key Takeaway. Distilled to the key point per item, short enough to scan in seconds, fully editable, with an explicit prompt to add your own genuine feelings (no tool can generate that part for you).
 - **History & trends** — saved entries are tracked in local storage, surfacing which themes keep recurring across placements over time.
 - **Copy / download / export** — grab the reflection as plain text, or export your whole history as JSON for backup.
+- **Score Tracker** — log each session's ratings against a weighted rubric (default: University of Sydney BOH2/BOH3, 4 domains) and see a running weighted-average grade, verified against the university's own worked example.
+- **Competency Tracker** — a checklist of clinical competencies, grouped by category, with a running completion percentage.
+- **Configurable rubric/competency profile** — the rating scale, weighted domains, and competency list all live in one swappable `ACTIVE_PROFILE` object, so a different placement's rubric and competency book can replace the default without touching the rest of the app.
+- **Outlook CE feedback import** — paste a Clinical Educator feedback email (the Power Automate template) straight into the Feedback box and it's recognized automatically: domain ratings are pre-filled into the Score Tracker, achieved competencies are matched against the checklist and staged for completion, critical-error flags are surfaced, and the free-text comments flow through the normal parser — all confirmed together with one click of Save. Matching favors the CE's written description over a typed competency code, since codes get mistyped more often than procedures get misdescribed, and section boundaries are found by locating the next known field label rather than relying on blank lines, since real Outlook-to-textarea pastes can drop them entirely.
 
 ## Usage
 
