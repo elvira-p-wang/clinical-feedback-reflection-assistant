@@ -1,5 +1,9 @@
 # Clinical Feedback to Action 🩺✨
 
+[![License: MIT](https://img.shields.io/badge/license-MIT-6b4a34.svg)](LICENSE)
+![No dependencies](https://img.shields.io/badge/dependencies-none-6b4a34.svg)
+![Offline-first](https://img.shields.io/badge/offline--first-yes-6b4a34.svg)
+
 Turns placement feedback into reflections you'll actually finish writing.
 
 A single-file, offline-first educational technology tool that turns raw
@@ -16,6 +20,7 @@ No installation. No backend. No account. Open `index.html` and go.
 - [Features](#features)
 - [Usage](#usage)
 - [How it works](#how-it-works)
+- [Scope & disclaimer](#scope--disclaimer)
 - [Why no AI?](#why-no-ai)
 - [Tech stack](#tech-stack)
 - [Privacy](#privacy)
@@ -73,6 +78,27 @@ Everything runs client-side, in three passes over the pasted text:
 3. **Distill** — text is cleaned up (stray symbols, repeated punctuation, filler openers stripped) and trimmed to a key phrase, so the breakdown and the reflection draft show the gist, not a wall of quotes.
 4. **Synthesize** — growth areas are ranked by category priority and used to generate both the priority action list and the reflective journal draft, with condition-specific detail inserted where relevant.
 
+## Scope & disclaimer
+
+The feedback parser, categorization, and reflection draft (sections 01–06)
+are discipline-agnostic and work for any clinical placement out of the box.
+
+The **Score Tracker** and **Competency Tracker** (sections 07–08) are a
+different story: they currently ship with the University of Sydney BOH2/BOH3
+rubric and competency book (2026 cohort) as the tool's one built-in default,
+read through a single swappable `ACTIVE_PROFILE` object. Support for
+generating a custom profile for other professions', cohorts', or
+institutions' rubrics and competency books — from their own PDFs — is on the
+roadmap but **not yet available**. Until then, the Score Tracker and
+Competency Tracker are only meaningful if your rubric and competency list
+actually match the built-in default; everyone else should treat sections
+01–06 as the useful part.
+
+Pass thresholds and rubric weights shown are defaults set from the public
+BOH2/BOH3 rubric and should be confirmed against your own unit outline —
+this project isn't an official University of Sydney tool and carries no
+institutional endorsement.
+
 ## Why no AI?
 
 This is deliberately **not** an AI product. Classification and summarization
@@ -95,17 +121,27 @@ build step. Data persistence uses the browser's `localStorage`.
 
 ## Privacy
 
-Everything runs **fully offline, in your browser** — there is no server
-component at all. All data (pasted feedback, saved history) stays in your
-browser's local storage on your own device. Nothing is sent anywhere, ever
-— not to me, not to a third party, not to an AI provider.
+There is no server component and no account — everything runs in your
+browser. All data (pasted feedback, saved history, scores, competency
+progress) stays in your browser's local storage on your own device. Nothing
+is sent to me, and no AI provider is ever involved in classification or
+reflection generation.
+
+The one exception is the optional **Speak** (voice input) button: it uses
+your browser's built-in speech recognition, which sends audio to your
+browser vendor's speech service (e.g. Google, for Chrome) for transcription
+— not local, and not this project's choice to make otherwise, since that's
+how the browser API works. It's off by default and clearly labelled in the
+app; typing/pasting stays fully offline as described above.
 
 ## Project history
 
-Built incrementally; see the commit history for the build order: data model
-→ parsing/classification → categorized breakdown → priority actions →
+Built incrementally; see the commit history for the full build order: data
+model → parsing/classification → categorized breakdown → priority actions →
 reflective draft generation → history/trends → utilities → flexible input
-parsing → cross-discipline category taxonomy.
+parsing → cross-discipline category taxonomy → voice input → visual redesign
+→ configurable rubric/competency profile → Score Tracker → Competency
+Tracker → Outlook CE feedback import.
 
 ## Contributing
 
