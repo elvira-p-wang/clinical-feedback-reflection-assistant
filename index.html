@@ -1855,16 +1855,44 @@ function initVoiceSupport(){
 }
 
 function loadSample(){
-  // Deliberately generic and de-identified: no named conditions, diagnoses,
-  // locations, or anything that could identify a real patient or clinic.
-  // Included on purpose: one strength, two growth areas, and one critical
-  // safety/compliance error, so all four signal types are demonstrated.
+  // Shaped like a real Outlook CE feedback email (the Power Automate
+  // template) rather than plain bullets, so "Try an example" also shows
+  // off the Outlook import path — Score Tracker pre-fill, competency
+  // matching, the works. Student, date, venue are all invented; no real
+  // person, clinic, or CE is represented. One competency is marked
+  // Competent (code and description agreeing, the clean case) and one is
+  // left NA, so loading it also demonstrates the auto-tick on Save.
   document.getElementById('rawInput').value =
-`• CE observed today's appointment and provided guidance throughout, including a discussion with the patient about the plan for their visit.
-• Well done building confident rapport with an anxious patient today and clearly explaining each step before proceeding — this helped keep them calm throughout.
-• Please ensure you ask more thorough follow-up questions whenever a patient discloses a relevant medical history — confirm severity, any known triggers, and precautions the team should be aware of, even if you keep the specific details brief in front of others.
-• Consider expanding your appointment notes — they should clearly capture what was discussed, the advice given and why, and the plan for the next visit.
-• Critical error: a mandatory sterilization/safety check was not completed before today's procedure, which is a serious breach of infection control protocol and must not happen again — always confirm the checklist before proceeding.`;
+`Student :sdoe1234-SAM DOE
+Date/Time : 2026-03-14/AM
+Venue : Riverside Dental Clinic
+Session : General Restorative
+
+Grades:
+Communication : P
+Critical thinking, knowledge and understanding : S
+Patient-centred care : P
+Procedural skills : S
+
+Infection contro (Critical Error?): No
+Professionalism (Critical Error?): No
+
+Comments overall: Well done today — you built good rapport with an anxious patient and explained each step clearly before proceeding. Please ensure you ask more thorough follow-up questions whenever a patient discloses relevant medical history, including severity and any known triggers. Consider expanding your appointment notes so they capture the plan for the next visit, not just what was done today. Good cavity outline and caries removal on the restoration.
+
+Continue with Clinical items work in this session? Yes
+
+Clinical items completed in this session:
+["135- Composite restoration - 1 surface","141- Oral hygiene instructions"]
+
+Continue with Clinical competancy tasks in this session? Yes
+
+Clinical Competancy/ competencies attempted in this session/ outcome:
+1. 4.1- Prophylaxis- Competent
+2. -NA
+
+Comments for Clinical competancy: Good technique and confident handling of the handpiece throughout.
+
+Breached Proffessionalism? : No`;
 }
 
 // init
